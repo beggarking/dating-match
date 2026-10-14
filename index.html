@@ -69,7 +69,7 @@
           <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" value="24"><input name="pmax" type="number" value="32"></div></div>
         </div>
         <div class="row" style="margin-top:14px" id="meButtons">
-          <button class="ghost" type="button" id="sampleBtn">예시 채우기</button>
+          <button class="ghost" type="button" id="sampleBtn">랜덤 예시 채우기</button>
           <button class="primary" type="button" id="saveMeBtn">내 정보 등록</button>
         </div>
         <div class="row" style="margin-top:14px; display:none" id="friendButtons">
@@ -339,7 +339,7 @@ function renderMe() {
   if (!me) {
     $("#meCard").innerHTML = `<h2>내 정보</h2>
       <div class="meta">아직 등록된 내 정보가 없어요. 왼쪽에 입력하고 <b>“내 정보 등록”</b>을 눌러주세요.<br>
-      (“예시 채우기”로 예시 정보를 넣어볼 수도 있어요)</div>`;
+      (“랜덤 예시 채우기”를 누를 때마다 다른 예시가 만들어져요)</div>`;
     return;
   }
   const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
@@ -421,11 +421,36 @@ function addFriend() {
 
 $("#tabMe").onclick = () => switchTab("me");
 $("#tabFriend").onclick = () => switchTab("friend");
-$("#sampleBtn").onclick = () => fillForm({
-  name: "지훈", gender: "남", age: 28, region: "서울", smoking: false, drinking: "가끔",
-  intro: "퇴근 후엔 동네 카페에서 소설 읽거나 영화 봐요", interests: ["독서", "영화", "카페", "등산"],
-  answers: { pace: 2, contact: 3, weekend: 2, energy: 2, goal: 3 }, prefer: { gender: "여", age_min: 24, age_max: 31 },
-});
+// ── 랜덤 예시: 누를 때마다 입력 항목들 중에서 무작위로 골라 새 사람을 만든다 ──
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+const SAMPLE_NAMES = {
+  남: ["지훈", "민준", "서준", "도현", "예준", "건우", "주원", "유찬", "은호", "선우"],
+  여: ["하나", "지민", "서연", "수빈", "지아", "유나", "나연", "은서", "채은", "보람"],
+};
+const SAMPLE_JOBS = ["개발자", "디자이너", "간호사", "교사", "마케터", "기획자", "회계사", "바리스타", "엔지니어", "작가"];
+const SAMPLE_REGIONS = ["서울", "서울", "서울", "경기", "경기", "인천", "부산", "대구", "대전", "광주"];
+
+function randomSample() {
+  const gender = pick(["남", "여"]);
+  const age = randInt(23, 34);
+  // 관심사: 주된 성향 축 하나를 정하고 그 축이 가장 큰 관심사 2~3개 + 아무 관심사 1~2개
+  const axis = randInt(0, AXES.length - 1);
+  const all = Object.keys(INTEREST_VEC);
+  const main = shuffle(all.filter(it => topAxis(INTEREST_VEC[it]) === AXES[axis])).slice(0, randInt(2, 3));
+  const extra = shuffle(all.filter(it => !main.includes(it))).slice(0, randInt(1, 2));
+  const interests = shuffle([...main, ...extra]);
+  return {
+    name: pick(SAMPLE_NAMES[gender]), gender, age,
+    region: pick(SAMPLE_REGIONS), smoking: Math.random() < 0.15, drinking: pick(["안 마심", "가끔", "가끔", "자주"]),
+    intro: `${pick(SAMPLE_JOBS)}로 일해요. 요즘 빠져 있는 건 ${interests[0]}, ${interests[1]}`,
+    interests,
+    answers: Object.fromEntries(QUESTIONS.map(q => [q.key, randInt(1, 5)])),
+    prefer: { gender: gender === "남" ? "여" : "남", age_min: Math.max(19, age - 4), age_max: age + 4 },
+  };
+}
+$("#sampleBtn").onclick = () => fillForm(randomSample());
 $("#saveMeBtn").onclick = saveMe;
 $("#addBtn").onclick = addFriend;
 $("#friendList").onclick = e => {
