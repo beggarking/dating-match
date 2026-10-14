@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match Lab</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#222; --sub:#777; --line:#e4e2dd; --accent:#e0526b; --good:#2e8b57; --warn:#c77700; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; font-size:14px; }
+  header { padding:16px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { margin:0; font-size:20px; } header span { color:var(--sub); }
+  main { display:grid; grid-template-columns:380px 1fr; gap:20px; padding:20px 24px; max-width:1200px; margin:auto; }
+  @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+  h2 { font-size:15px; margin:0 0 12px; } h3 { font-size:13px; margin:14px 0 6px; color:var(--sub); }
+  label { display:block; font-size:12px; color:var(--sub); margin:8px 0 3px; }
+  input, select { width:100%; padding:7px 8px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; min-width:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .chips label { margin:0; display:inline-flex; align-items:center; gap:3px; padding:3px 8px; border:1px solid var(--line); border-radius:12px; color:var(--ink); cursor:pointer; }
+  .chips input { width:auto; margin:0; }
+  .chips label:has(input:checked) { background:#ffe6ea; border-color:var(--accent); }
+  .q { display:grid; grid-template-columns:70px 1fr; align-items:center; gap:6px; margin:4px 0; font-size:12px; }
+  button { padding:8px 12px; border:0; border-radius:6px; background:var(--ink); color:#fff; font:inherit; cursor:pointer; }
+  button.ghost { background:none; color:var(--ink); border:1px solid var(--line); }
+  button.primary { background:var(--accent); }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; } .tabs button { flex:1; background:#ddd; color:var(--ink); } .tabs button.on { background:var(--accent); color:#fff; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:6px 4px; border-bottom:1px solid var(--line); text-align:center; } th { color:var(--sub); font-weight:normal; }
+  td:nth-child(2) { text-align:left; } tr.first td { background:#fff4f6; font-weight:600; }
+  .winner .total { font-size:32px; color:var(--accent); font-weight:700; }
+  .bars div { display:grid; grid-template-columns:80px 1fr 60px; gap:8px; align-items:center; font-size:12px; margin:4px 0; }
+  .bar { height:8px; background:#eee; border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
+  ul { margin:4px 0; padding-left:18px; } li { margin:3px 0; }
+  li.good::marker { content:"✓ "; color:var(--good); } li.warn::marker { content:"! "; color:var(--warn); }
+  .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:40px 0; }
+  .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); }
+  .tag.friend { background:#ffe6ea; color:var(--accent); }
+</style>
+</head>
+<body>
+<header><h1>💘 Match Lab</h1> <span>내 정보를 입력하면 누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여줍니다</span></header>
+<main>
+  <section>
+    <div class="card">
+      <div class="tabs">
+        <button id="tabMe" class="on">① 내 정보</button>
+        <button id="tabFriend">② 친구 추가</button>
+      </div>
+      <form id="form" onsubmit="return false">
+        <div class="row">
+          <div><label>이름</label><input name="name" required></div>
+          <div><label>성별</label><select name="gender"><option>남</option><option>여</option></select></div>
+          <div><label>나이</label><input name="age" type="number" min="19" max="99" value="27" required></div>
+        </div>
+        <div class="row">
+          <div><label>지역</label><select name="region"></select></div>
+          <div><label>흡연</label><select name="smoking"><option value="false">비흡연</option><option value="true">흡연</option></select></div>
+          <div><label>음주</label><select name="drinking"><option>안 마심</option><option selected>가끔</option><option>자주</option></select></div>
+        </div>
+        <label>한 줄 소개</label><input name="intro" placeholder="퇴근 후엔 카페에서 책 읽어요">
+        <label>관심사 (여러 개 선택)</label><div class="chips" id="interests"></div>
+        <label>가치관 · 성향</label><div id="questions"></div>
+        <div class="row">
+          <div><label>원하는 상대 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select></div>
+          <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" value="24"><input name="pmax" type="number" value="32"></div></div>
+        </div>
+        <div class="row" style="margin-top:14px" id="meButtons">
+          <button class="ghost" type="button" id="sampleBtn">예시 채우기</button>
+          <button class="primary" type="button" id="matchBtn">추천 받기</button>
+        </div>
+        <div class="row" style="margin-top:14px; display:none" id="friendButtons">
+          <button class="primary" type="button" id="addBtn">저장소에 친구 추가</button>
+        </div>
+      </form>
+    </div>
+    <div class="card">
+      <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
+      <div class="meta" id="friendList"></div>
+      <div class="meta" style="margin-top:6px">친구와 내 정보는 이 브라우저에만 저장됩니다.</div>
+    </div>
+  </section>
+
+  <section id="out">
+    <div class="card empty">내 정보를 입력하고 “추천 받기”를 눌러주세요.<br>(“예시 채우기”로 바로 체험할 수 있어요)</div>
+    <div class="card" id="howto"></div>
+  </section>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// 1. 임베딩 정의: 관심사 하나하나를 6가지 성향 축 위의 벡터로 표현
+//    축: [문화·예술, 액티브, 사교, 집콕, 커리어, 다정]
+//    → 글자가 달라도 같은 성향이면 벡터가 비슷해져서 유사도가 높게 나온다
+//      (예: 등산과 캠핑은 둘 다 '액티브' 축이 커서 비슷함)
+// ═══════════════════════════════════════════════════════════════════
+const AXES = ["문화·예술", "액티브", "사교", "집콕", "커리어", "다정"];
+const INTEREST_VEC = {
+  "독서": [1, 0, 0, .3, .2, 0],   "영화": [1, 0, .2, .3, 0, 0],   "전시회": [1, 0, .2, 0, 0, 0],
+  "음악감상": [.8, 0, .3, .3, 0, 0], "글쓰기": [.9, 0, 0, .3, .2, 0], "그림": [.8, 0, 0, .3, 0, .2],
+  "등산": [0, 1, 0, 0, 0, 0],     "캠핑": [0, .8, .3, 0, 0, .2],  "러닝": [0, 1, 0, 0, .3, 0],
+  "헬스": [0, 1, 0, 0, .2, 0],    "서핑": [0, 1, .3, 0, 0, 0],    "자전거": [0, .9, .1, 0, 0, 0],
+  "여행": [.2, .4, .8, 0, 0, 0],  "맛집": [0, 0, .8, 0, 0, .3],   "페스티벌": [.3, .2, 1, 0, 0, 0],
+  "술자리": [0, 0, 1, 0, 0, 0],   "카페": [.4, 0, .6, 0, 0, .2],  "공연": [.6, 0, .7, 0, 0, 0],
+  "게임": [0, 0, .1, 1, 0, 0],    "애니메이션": [.3, 0, 0, 1, 0, 0], "보드게임": [0, 0, .4, .8, 0, 0],
+  "코딩": [0, 0, 0, .8, .5, 0],   "재테크": [0, 0, 0, 0, 1, 0],   "자기계발": [.2, 0, 0, 0, 1, 0],
+  "골프": [0, .4, .4, 0, .6, 0],  "와인": [0, 0, .6, 0, .4, 0],   "요리": [0, 0, .2, .3, 0, 1],
+  "베이킹": [0, 0, 0, .3, 0, 1],  "반려동물": [0, 0, 0, .3, 0, 1], "봉사활동": [0, 0, .3, 0, 0, 1],
+};
+
+// 가치관 질문: 1~5 척도 → 5차원 벡터
+const QUESTIONS = [
+  { key: "pace",    label: "연애 속도", low: "천천히",   high: "빠르게" },
+  { key: "contact", label: "연락 빈도", low: "가끔",     high: "자주" },
+  { key: "weekend", label: "주말",     low: "집에서",   high: "밖에서" },
+  { key: "energy",  label: "성격",     low: "차분",     high: "활발" },
+  { key: "goal",    label: "만남 목적", low: "가볍게",   high: "결혼 전제" },
+];
+
+const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "기타"];
+const DRINK = { "안 마심": 0, "가끔": 1, "자주": 2 };
+
+// 점수 배분 (총 100점)
+const POINTS = { interest: 40, values: 40, life: 20 };
+
+// ═══════════════════════════════════════════════════════════════════
+// 2. 프로필 저장소: 가상 프로필 20명 (+ 브라우저에 저장된 친구들)
+//    a = 가치관 답 [연애 속도, 연락 빈도, 주말, 성격, 만남 목적]
+// ═══════════════════════════════════════════════════════════════════
+const P = (name, gender, age, region, smoking, drinking, interests, a, pg, pmin, pmax, intro) => ({
+  id: "v-" + name, source: "virtual", name, gender, age, region, smoking, drinking, interests, intro,
+  answers: Object.fromEntries(QUESTIONS.map((q, i) => [q.key, a[i]])),
+  prefer: { gender: pg, age_min: pmin, age_max: pmax },
+});
+const VIRTUAL = [
+  P("서윤", "여", 26, "서울", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "주말엔 카페에서 책 읽는 시간이 제일 행복해요"),
+  P("하린", "여", 27, "서울", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "페스티벌과 파티를 사랑하는 에너자이저"),
+  P("지우", "여", 25, "경기", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 산이나 캠핑장에 있어요"),
+  P("민서", "여", 29, "서울", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "스타트업 PM, 계획 세우는 걸 좋아해요"),
+  P("예린", "여", 24, "부산", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "고양이 두 마리와 사는 일러스트레이터"),
+  P("수아", "여", 28, "서울", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 개발자, 밤에 활동하는 올빼미형"),
+  P("채원", "여", 31, "서울", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "초등학교 선생님, 주말엔 봉사활동"),
+  P("다은", "여", 26, "서울", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "출판사 편집자, 혼자 영화관 가는 것도 좋아해요"),
+  P("소연", "여", 27, "서울", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "간호사, 쉬는 날엔 영화 리뷰를 써요"),
+  P("가은", "여", 30, "인천", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "마케팅 회사 대표, 일 욕심이 많아요"),
+  P("도윤", "남", 28, "서울", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "회계사, 주말엔 헬스와 맛집 탐방"),
+  P("시우", "남", 27, "경기", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드에서 기타 쳐요"),
+  P("준호", "남", 29, "서울", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "번역가, 고전 영화를 즐겨 봐요"),
+  P("태민", "남", 26, "경기", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "체육 트레이너, 서핑과 클라이밍"),
+  P("현우", "남", 31, "서울", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "IT 팀장, 결혼을 생각하고 만나고 싶어요"),
+  P("민재", "남", 27, "서울", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "카피라이터, 노는 게 제일 좋아"),
+  P("승현", "남", 25, "부산", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "수의테크니션, 강아지랑 살아요"),
+  P("재원", "남", 28, "서울", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "백엔드 개발자, SF 소설 좋아해요"),
+  P("지환", "남", 33, "서울", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "고등학교 국어 선생님"),
+  P("우진", "남", 30, "대구", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "정비소 사장, 캠핑장에서 불멍"),
+];
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. 계산 로직
+// ═══════════════════════════════════════════════════════════════════
+const dot = (a, b) => a.reduce((s, x, i) => s + x * b[i], 0);
+const norm = v => Math.sqrt(dot(v, v));
+const cosine = (a, b) => (norm(a) && norm(b) ? dot(a, b) / (norm(a) * norm(b)) : 0);
+
+/** 관심사 목록 → 6차원 임베딩 벡터 (각 관심사 벡터의 합) */
+function embedInterests(interests) {
+  return interests.reduce((sum, it) => sum.map((x, i) => x + (INTEREST_VEC[it]?.[i] ?? 0)), AXES.map(() => 0));
+}
+
+/** 벡터에서 가장 큰 성향 축 이름 */
+const topAxis = v => AXES[v.indexOf(Math.max(...v))];
+
+/** 걸러내기: 본인 → 성별 → 나이 (서로의 조건을 모두 확인) */
+function filterReasons(me, o) {
+  if (o.id === me.id || (o.name === me.name && o.age === me.age && o.gender === me.gender)) return ["본인"];
+  const r = [];
+  const ok = (pref, g) => pref === "상관없음" || pref === g;
+  if (!ok(me.prefer.gender, o.gender)) r.push(`내가 원하는 성별(${me.prefer.gender})이 아님`);
+  if (!ok(o.prefer.gender, me.gender)) r.push(`상대가 원하는 성별(${o.prefer.gender})이 아님`);
+  if (o.age < me.prefer.age_min || o.age > me.prefer.age_max) r.push(`상대 ${o.age}세가 내 범위(${me.prefer.age_min}~${me.prefer.age_max}) 밖`);
+  if (me.age < o.prefer.age_min || me.age > o.prefer.age_max) r.push(`내 ${me.age}세가 상대 범위(${o.prefer.age_min}~${o.prefer.age_max}) 밖`);
+  return r;
+}
+
+function scoreOne(me, o) {
+  // (1) 관심사: 임베딩 벡터 코사인 유사도 → 40점
+  const mv = embedInterests(me.interests), ov = embedInterests(o.interests);
+  const interestSim = cosine(mv, ov);
+  const same = me.interests.filter(x => o.interests.includes(x));
+  // 같은 관심사는 아니지만 같은 성향 축이 가장 큰 관심사끼리 (예: 등산 ~ 캠핑)
+  const similar = [];
+  for (const a of me.interests) for (const b of o.interests) {
+    if (a !== b && !same.includes(a) && !same.includes(b) && cosine(INTEREST_VEC[a], INTEREST_VEC[b]) >= 0.8) similar.push(`${a}~${b}`);
+  }
+
+  // (2) 가치관: 5개 답의 차이 → 40점 (모두 같으면 만점, 차이 4가 최대)
+  const diffs = QUESTIONS.map(q => ({ q, me: me.answers[q.key], them: o.answers[q.key], d: Math.abs(me.answers[q.key] - o.answers[q.key]) }));
+  const valuesSim = 1 - diffs.reduce((s, x) => s + x.d, 0) / (4 * QUESTIONS.length);
+
+  // (3) 생활 조건: 나이차·지역·흡연·음주 → 20점
+  const gap = Math.abs(me.age - o.age);
+  const life = [
+    { item: "나이차", ok: gap <= 3, s: gap <= 3 ? 1 : Math.max(0, 1 - 0.15 * (gap - 3)), text: `${gap}살 차이` },
+    { item: "지역", ok: me.region === o.region, s: me.region === o.region ? 1 : 0.4, text: me.region === o.region ? `둘 다 ${o.region}` : `${me.region} / ${o.region}` },
+    { item: "흡연", ok: me.smoking === o.smoking, s: me.smoking === o.smoking ? 1 : 0.2, text: me.smoking === o.smoking ? (o.smoking ? "둘 다 흡연" : "둘 다 비흡연") : "흡연 여부 다름" },
+    { item: "음주", ok: DRINK[me.drinking] === DRINK[o.drinking], s: [1, 0.6, 0.2][Math.abs(DRINK[me.drinking] - DRINK[o.drinking])], text: `음주 ${me.drinking} / ${o.drinking}` },
+  ];
+  const lifeSim = life.reduce((s, x) => s + x.s, 0) / life.length;
+
+  const pts = {
+    interest: +(interestSim * POINTS.interest).toFixed(1),
+    values: +(valuesSim * POINTS.values).toFixed(1),
+    life: +(lifeSim * POINTS.life).toFixed(1),
+  };
+  return {
+    profile: o, pts, total: +(pts.interest + pts.values + pts.life).toFixed(1),
+    detail: { interestSim, mv, ov, same, similar, diffs, life },
+  };
+}
+
+function recommend(me, pool) {
+  const filtered = [], scored = [];
+  for (const o of pool) {
+    const reasons = filterReasons(me, o);
+    if (reasons.length) filtered.push({ profile: o, reasons });
+    else scored.push(scoreOne(me, o));
+  }
+  scored.sort((a, b) => b.total - a.total);
+  return { filtered, scored };
+}
+
+/** 1위를 고른 이유를 문장으로 */
+function explainWinner(me, w, second) {
+  const d = w.detail, good = [], warn = [];
+  if (d.same.length) good.push(`같은 관심사가 ${d.same.length}개 있어요: ${d.same.join(", ")}`);
+  if (d.similar.length) good.push(`종류는 달라도 성향이 같은 관심사: ${d.similar.join(", ")}`);
+  good.push(`관심사 임베딩 유사도 ${Math.round(d.interestSim * 100)}% — 나는 '${topAxis(d.mv)}', ${w.profile.name}님은 '${topAxis(d.ov)}' 성향이 가장 커요`);
+  const sameAns = d.diffs.filter(x => x.d === 0).map(x => x.q.label);
+  if (sameAns.length) good.push(`가치관 ${QUESTIONS.length}개 중 ${sameAns.length}개 답이 완전히 같아요: ${sameAns.join(", ")}`);
+  for (const x of d.diffs.filter(x => x.d >= 2)) {
+    warn.push(`${x.q.label}: 나 ${x.me} vs 상대 ${x.them} (1=${x.q.low}, 5=${x.q.high})`);
+  }
+  for (const l of d.life) (l.ok ? good : warn).push(`${l.item}: ${l.text}`);
+  if (second) {
+    const keys = { interest: "관심사", values: "가치관", life: "생활 조건" };
+    const k = Object.keys(keys).reduce((a, b) => (w.pts[b] - second.pts[b] > w.pts[a] - second.pts[a] ? b : a));
+    good.push(`2위 ${second.profile.name}님보다 ${(w.total - second.total).toFixed(1)}점 높고, 가장 크게 앞선 항목은 '${keys[k]}' (+${(w.pts[k] - second.pts[k]).toFixed(1)}점)`);
+  }
+  return { good, warn };
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 4. 화면
+// ═══════════════════════════════════════════════════════════════════
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem("matchlab." + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("matchlab." + k, JSON.stringify(v)); } catch {} },
+};
+const friends = () => store.get("friends", []);
+const pool = () => [...VIRTUAL, ...friends()];
+let mode = "me";
+
+// 폼 구성
+$("[name=region]").innerHTML = REGIONS.map(r => `<option>${r}</option>`).join("");
+$("#interests").innerHTML = Object.keys(INTEREST_VEC).map(it => `<label><input type="checkbox" value="${it}">${it}</label>`).join("");
+$("#questions").innerHTML = QUESTIONS.map(q => `
+  <div class="q"><span>${q.label}</span>
+    <select name="q_${q.key}">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 3 ? "selected" : ""}>${n}${n === 1 ? " " + q.low : n === 5 ? " " + q.high : ""}</option>`).join("")}</select></div>`).join("");
+$("#howto").innerHTML = `<h2>점수 계산 방법 (100점)</h2>
+  <ul>
+    <li><b>걸러내기</b> — 본인, 서로 원하는 성별·나이가 안 맞는 사람은 점수 계산 전에 제외</li>
+    <li><b>관심사 ${POINTS.interest}점</b> — 관심사를 6가지 성향 축(${AXES.join(", ")}) 벡터로 임베딩해 코사인 유사도 계산</li>
+    <li><b>가치관 ${POINTS.values}점</b> — 5개 질문 답(1~5)의 차이가 작을수록 높음</li>
+    <li><b>생활 조건 ${POINTS.life}점</b> — 나이차 · 지역 · 흡연 · 음주</li>
+  </ul>`;
+
+function readForm() {
+  const f = Object.fromEntries(new FormData($("#form")));
+  return {
+    name: f.name.trim(), gender: f.gender, age: +f.age, region: f.region,
+    smoking: f.smoking === "true", drinking: f.drinking, intro: f.intro.trim(),
+    interests: [...document.querySelectorAll("#interests input:checked")].map(x => x.value),
+    answers: Object.fromEntries(QUESTIONS.map(q => [q.key, +f["q_" + q.key]])),
+    prefer: { gender: f.pgender, age_min: +f.pmin, age_max: +f.pmax },
+  };
+}
+
+function fillForm(p) {
+  const f = $("#form").elements;
+  for (const k of ["name", "gender", "age", "region", "drinking", "intro"]) f[k].value = p[k] ?? "";
+  f.smoking.value = String(!!p.smoking);
+  document.querySelectorAll("#interests input").forEach(x => (x.checked = p.interests.includes(x.value)));
+  QUESTIONS.forEach(q => (f["q_" + q.key].value = p.answers[q.key]));
+  f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max;
+}
+
+function switchTab(m) {
+  mode = m;
+  $("#tabMe").classList.toggle("on", m === "me");
+  $("#tabFriend").classList.toggle("on", m === "friend");
+  $("#meButtons").style.display = m === "me" ? "" : "none";
+  $("#friendButtons").style.display = m === "me" ? "none" : "";
+  $("#form").reset();
+  document.querySelectorAll("#interests input").forEach(x => (x.checked = false));
+  const me = store.get("me", null);
+  if (m === "me" && me) fillForm(me);
+}
+
+function validate(p) {
+  if (!$("#form").reportValidity()) return false;
+  if (!p.interests.length) { alert("관심사를 하나 이상 골라주세요."); return false; }
+  return true;
+}
+
+function renderPool() {
+  const fs = friends();
+  $("#poolCount").textContent = `${VIRTUAL.length + fs.length}명 (가상 ${VIRTUAL.length} · 친구 ${fs.length})`;
+  $("#friendList").innerHTML = fs.length
+    ? "친구: " + fs.map(p => `${esc(p.name)} <a href="#" data-del="${esc(p.id)}">삭제</a>`).join(" · ")
+    : "아직 추가한 친구가 없어요.";
+}
+
+function runMatch() {
+  const me = { ...readForm(), id: "me" };
+  if (!validate(me)) return;
+  store.set("me", me);
+  const { filtered, scored } = recommend(me, pool());
+  const out = $("#out");
+  if (!scored.length) {
+    out.innerHTML = `<div class="card empty">조건에 맞는 상대가 없어요.</div>` + filteredCard(filtered) + $("#howto").outerHTML;
+    return;
+  }
+  const w = scored[0], why = explainWinner(me, w, scored[1]);
+  const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${(v / max) * 100}%"></i></span><span>${v} / ${max}</span></div>`;
+  out.innerHTML = `
+    <div class="card winner">
+      <h2>🏆 1위 추천: ${esc(w.profile.name)} <span class="tag ${w.profile.source === "friend" ? "friend" : ""}">${w.profile.source === "friend" ? "친구" : "가상"}</span></h2>
+      <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
+      ${w.profile.intro ? `<div class="meta">“${esc(w.profile.intro)}”</div>` : ""}
+      <div style="display:flex; gap:20px; align-items:center; margin-top:10px">
+        <div class="total">${w.total}<span class="meta"> / 100</span></div>
+        <div class="bars" style="flex:1">${bar("관심사", w.pts.interest, POINTS.interest)}${bar("가치관", w.pts.values, POINTS.values)}${bar("생활 조건", w.pts.life, POINTS.life)}</div>
+      </div>
+      <h3>왜 1위인가요?</h3>
+      <ul>${why.good.map(x => `<li class="good">${esc(x)}</li>`).join("")}</ul>
+      ${why.warn.length ? `<h3>참고할 차이점</h3><ul>${why.warn.map(x => `<li class="warn">${esc(x)}</li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="card">
+      <h2>전체 점수표 (${scored.length}명)</h2>
+      <table>
+        <tr><th>순위</th><th>이름</th><th>관심사<br>/${POINTS.interest}</th><th>가치관<br>/${POINTS.values}</th><th>생활<br>/${POINTS.life}</th><th>총점</th></tr>
+        ${scored.map((s, i) => `<tr class="${i === 0 ? "first" : ""}"><td>${i + 1}</td>
+          <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.region)}</span>${s.profile.source === "friend" ? ' <span class="tag friend">친구</span>' : ""}</td>
+          <td>${s.pts.interest}</td><td>${s.pts.values}</td><td>${s.pts.life}</td><td><b>${s.total}</b></td></tr>`).join("")}
+      </table>
+    </div>
+    ${filteredCard(filtered)}
+    ${$("#howto").outerHTML}`;
+  out.scrollIntoView({ behavior: "smooth" });
+}
+
+function filteredCard(filtered) {
+  return `<div class="card"><h2>걸러진 사람 (${filtered.length}명)</h2>
+    <ul>${filtered.map(f => `<li class="warn">${esc(f.profile.name)} <span class="meta">${esc(f.profile.gender)} · ${f.profile.age}세</span> — ${f.reasons.map(esc).join(", ")}</li>`).join("")}</ul></div>`;
+}
+
+function addFriend() {
+  const p = readForm();
+  if (!validate(p)) return;
+  store.set("friends", [...friends(), { ...p, id: "f-" + Date.now().toString(36), source: "friend" }]);
+  switchTab("friend");
+  renderPool();
+  alert(`${p.name}님을 저장소에 추가했어요.`);
+}
+
+$("#tabMe").onclick = () => switchTab("me");
+$("#tabFriend").onclick = () => switchTab("friend");
+$("#sampleBtn").onclick = () => fillForm({
+  name: "지훈", gender: "남", age: 28, region: "서울", smoking: false, drinking: "가끔",
+  intro: "퇴근 후엔 동네 카페에서 소설 읽거나 영화 봐요", interests: ["독서", "영화", "카페", "등산"],
+  answers: { pace: 2, contact: 3, weekend: 2, energy: 2, goal: 3 }, prefer: { gender: "여", age_min: 24, age_max: 31 },
+});
+$("#matchBtn").onclick = runMatch;
+$("#addBtn").onclick = addFriend;
+$("#friendList").onclick = e => {
+  const id = e.target.dataset.del;
+  if (!id) return;
+  e.preventDefault();
+  store.set("friends", friends().filter(p => p.id !== id));
+  renderPool();
+};
+switchTab("me");
+renderPool();
+</script>
+</body>
+</html>
