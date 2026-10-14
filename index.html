@@ -69,8 +69,9 @@
           <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" value="24"><input name="pmax" type="number" value="32"></div></div>
         </div>
         <div class="row" style="margin-top:14px" id="meButtons">
-          <button class="ghost" type="button" id="sampleBtn">랜덤 예시 채우기</button>
-          <button class="primary" type="button" id="saveMeBtn">내 정보 등록</button>
+          <button class="ghost" type="button" id="sampleBtn">랜덤 예시</button>
+          <button class="ghost" type="button" id="saveMeBtn">☆ 즐겨찾기 저장</button>
+          <button class="primary" type="button" id="matchBtn" style="flex:1.4">추천 받기</button>
         </div>
         <div class="row" style="margin-top:14px; display:none" id="friendButtons">
           <button class="primary" type="button" id="addBtn">저장소에 친구 추가</button>
@@ -299,7 +300,10 @@ function fillForm(p) {
   f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max;
 }
 
+let meDraft = null; // 저장하지 않고 입력 중인 내 정보 (친구 탭에 다녀와도 유지)
+
 function switchTab(m) {
+  if (mode === "me" && m !== "me") meDraft = readForm();
   mode = m;
   $("#tabMe").classList.toggle("on", m === "me");
   $("#tabFriend").classList.toggle("on", m === "friend");
@@ -307,7 +311,7 @@ function switchTab(m) {
   $("#friendButtons").style.display = m === "me" ? "none" : "";
   $("#form").reset();
   document.querySelectorAll("#interests input").forEach(x => (x.checked = false));
-  const me = store.get("me", null);
+  const me = meDraft ?? store.get("me", null);
   if (m === "me" && me) fillForm(me);
 }
 
@@ -325,25 +329,26 @@ function renderPool() {
     : "아직 추가한 친구가 없어요.";
 }
 
+/** 즐겨찾기: 자주 쓰는 내 정보를 저장해두는 용도 (추천에는 필요 없음) */
 function saveMe() {
   const me = { ...readForm(), id: "me" };
   if (!validate(me)) return;
   store.set("me", me);
   renderMe();
-  $("#meCard").scrollIntoView({ behavior: "smooth" });
+  $("#saveMeBtn").textContent = "★ 저장됨";
+  setTimeout(() => ($("#saveMeBtn").textContent = "☆ 즐겨찾기 저장"), 1500);
 }
 
 function renderMe() {
   const me = store.get("me", null);
-  $("#saveMeBtn").textContent = me ? "내 정보 수정 저장" : "내 정보 등록";
   if (!me) {
-    $("#meCard").innerHTML = `<h2>내 정보</h2>
-      <div class="meta">아직 등록된 내 정보가 없어요. 왼쪽에 입력하고 <b>“내 정보 등록”</b>을 눌러주세요.<br>
-      (“랜덤 예시 채우기”를 누를 때마다 다른 예시가 만들어져요)</div>`;
+    $("#meCard").innerHTML = `<h2>내 정보 입력하고 바로 추천받기</h2>
+      <div class="meta">왼쪽에 입력하고 <b>“추천 받기”</b>를 누르면 바로 결과가 나와요. 저장은 필요 없어요.<br>
+      “랜덤 예시”를 누르면 누를 때마다 다른 예시가 채워지고, 자주 쓰는 정보는 “☆ 즐겨찾기 저장”으로 남겨둘 수 있어요.</div>`;
     return;
   }
   const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
-  $("#meCard").innerHTML = `<h2>내 정보 <span class="tag">등록됨</span></h2>
+  $("#meCard").innerHTML = `<h2>★ 즐겨찾기한 내 정보</h2>
     <dl>
       <dt>이름</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)} · ${me.smoking ? "흡연" : "비흡연"} · 음주 ${esc(me.drinking)}</span></dd>
       ${me.intro ? `<dt>소개</dt><dd>${esc(me.intro)}</dd>` : ""}
@@ -352,24 +357,27 @@ function renderMe() {
       <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)} · ${me.prefer.age_min}~${me.prefer.age_max}세</dd>
     </dl>
     <div class="row">
-      <button class="ghost" type="button" id="editMeBtn">수정</button>
+      <button class="ghost" type="button" id="loadMeBtn">입력칸에 불러오기</button>
       <button class="ghost" type="button" id="delMeBtn">삭제</button>
-      <button class="primary" type="button" id="matchBtn" style="flex:2">추천 받기</button>
+      <button class="primary" type="button" id="favMatchBtn" style="flex:1.4">이 정보로 추천</button>
     </div>`;
-  $("#editMeBtn").onclick = () => { switchTab("me"); $("#form").scrollIntoView({ behavior: "smooth" }); };
+  $("#loadMeBtn").onclick = () => { meDraft = null; switchTab("me"); fillForm(me); $("#form").scrollIntoView({ behavior: "smooth" }); };
   $("#delMeBtn").onclick = () => {
-    if (!confirm("등록된 내 정보를 삭제할까요?")) return;
+    if (!confirm("즐겨찾기한 내 정보를 삭제할까요? (입력칸 내용은 그대로 남아요)")) return;
     try { localStorage.removeItem("matchlab.me"); } catch {}
-    switchTab("me");
     renderMe();
-    $("#out").innerHTML = $("#howto").outerHTML;
   };
-  $("#matchBtn").onclick = runMatch;
+  $("#favMatchBtn").onclick = () => runMatch(me);
 }
 
-function runMatch() {
-  const me = store.get("me", null);
-  if (!me) { alert("먼저 내 정보를 등록해주세요."); return; }
+/** 입력칸의 내용으로 바로 추천 (저장하지 않음) */
+function matchFromForm() {
+  if (mode !== "me") switchTab("me");
+  const me = { ...readForm(), id: "me" };
+  if (validate(me)) runMatch(me);
+}
+
+function runMatch(me) {
   const { filtered, scored } = recommend(me, pool());
   const out = $("#out");
   if (!scored.length) {
@@ -426,7 +434,7 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
 const SAMPLE_NAMES = {
-  남: ["지훈", "민준", "서준", "도현", "예준", "건우", "주원", "유찬", "은호", "선우"],
+  남: ["태윤", "민준", "서준", "도현", "예준", "건우", "주원", "유찬", "은호", "선우"],
   여: ["하나", "지민", "서연", "수빈", "지아", "유나", "나연", "은서", "채은", "보람"],
 };
 const SAMPLE_JOBS = ["개발자", "디자이너", "간호사", "교사", "마케터", "기획자", "회계사", "바리스타", "엔지니어", "작가"];
@@ -452,6 +460,7 @@ function randomSample() {
 }
 $("#sampleBtn").onclick = () => fillForm(randomSample());
 $("#saveMeBtn").onclick = saveMe;
+$("#matchBtn").onclick = matchFromForm;
 $("#addBtn").onclick = addFriend;
 $("#friendList").onclick = e => {
   const id = e.target.dataset.del;
