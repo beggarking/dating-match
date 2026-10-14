@@ -1,0 +1,341 @@
+[
+  {
+    "id": "v01",
+    "name": "서윤",
+    "gender": "여",
+    "age": 26,
+    "region": "서울",
+    "mbti": "INFJ",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "주말엔 카페에서 책 읽는 시간이 제일 행복해요. 조용한 전시회나 독립서점 구경하는 걸 좋아합니다.",
+    "values": "연애는 서로의 성장을 응원하는 관계라고 생각해요. 대화가 잘 통하는 게 가장 중요해요.",
+    "ideal": "차분하고 대화가 잘 통하는 사람. 책이나 영화 이야기를 깊게 나눌 수 있으면 좋겠어요.",
+    "interests": [
+      "독서",
+      "전시회",
+      "카페 투어",
+      "필름 카메라"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 25,
+      "age_max": 32
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v02",
+    "name": "하린",
+    "gender": "여",
+    "age": 27,
+    "region": "서울",
+    "mbti": "ENFP",
+    "smoking": false,
+    "drinking": "자주",
+    "bio": "새로운 사람 만나는 걸 좋아하고 페스티벌이나 클럽 파티를 자주 다녀요. 에너지가 넘치는 편이에요.",
+    "values": "인생은 즐겁게! 지금 이 순간을 최대한 즐기면서 사는 게 제 모토예요.",
+    "ideal": "같이 놀러 다닐 수 있는 활발하고 유머 있는 사람이요.",
+    "interests": [
+      "음악 페스티벌",
+      "댄스",
+      "여행",
+      "칵테일"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 25,
+      "age_max": 33
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v03",
+    "name": "지우",
+    "gender": "여",
+    "age": 25,
+    "region": "경기",
+    "mbti": "ISTP",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "주말마다 산에 오르거나 캠핑을 가요. 자연 속에서 쉬는 게 최고의 힐링이에요.",
+    "values": "서로 사생활을 존중하면서도 함께하는 시간은 진심으로 보내는 관계가 좋아요.",
+    "ideal": "아웃도어 활동을 같이 즐길 수 있는 건강하고 듬직한 사람.",
+    "interests": [
+      "캠핑",
+      "트레킹",
+      "자전거",
+      "요리"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 24,
+      "age_max": 31
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v04",
+    "name": "민서",
+    "gender": "여",
+    "age": 29,
+    "region": "서울",
+    "mbti": "ESTJ",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "스타트업에서 PM으로 일하고 있어요. 계획 세우고 실행하는 걸 좋아하고 퇴근 후엔 러닝을 해요.",
+    "values": "결혼을 전제로 진지하게 만나고 싶어요. 경제관념과 미래 계획이 맞는 게 중요해요.",
+    "ideal": "자기 일에 열정 있고 책임감 있는 사람. 미래를 함께 그릴 수 있는 사람.",
+    "interests": [
+      "러닝",
+      "재테크",
+      "자기계발",
+      "와인"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 28,
+      "age_max": 35
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v05",
+    "name": "예린",
+    "gender": "여",
+    "age": 24,
+    "region": "부산",
+    "mbti": "ISFP",
+    "smoking": false,
+    "drinking": "안 마심",
+    "bio": "그림 그리는 걸 좋아해서 작은 일러스트 작업을 하고 있어요. 고양이 두 마리랑 살아요.",
+    "values": "따뜻하고 다정한 관계를 원해요. 작은 것에도 고마워할 줄 아는 마음이 중요해요.",
+    "ideal": "다정하고 섬세한 사람. 동물을 좋아하면 더 좋아요.",
+    "interests": [
+      "그림",
+      "고양이",
+      "보드게임",
+      "베이킹"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 23,
+      "age_max": 30
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v06",
+    "name": "수아",
+    "gender": "여",
+    "age": 28,
+    "region": "서울",
+    "mbti": "INTP",
+    "smoking": true,
+    "drinking": "자주",
+    "bio": "게임 개발자예요. 퇴근하면 스팀 게임하거나 SF 소설 읽어요. 밤에 활동하는 올빼미형.",
+    "values": "각자의 취미를 존중하는 쿨한 연애가 좋아요. 너무 자주 연락하는 건 부담스러워요.",
+    "ideal": "게임이나 SF 같은 덕질을 이해해주는 사람.",
+    "interests": [
+      "게임",
+      "SF 소설",
+      "애니메이션",
+      "코딩"
+    ],
+    "prefer": {
+      "gender": "상관없음",
+      "age_min": 24,
+      "age_max": 34
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v07",
+    "name": "채원",
+    "gender": "여",
+    "age": 31,
+    "region": "서울",
+    "mbti": "ENFJ",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "초등학교 선생님이에요. 아이들 웃음이 제 에너지원이고 주말엔 봉사활동을 해요.",
+    "values": "가족을 소중히 여기고 서로 배려하는 관계를 꿈꿔요.",
+    "ideal": "책임감 있고 가정적인 사람. 연상이면 좋겠어요.",
+    "interests": [
+      "봉사활동",
+      "피아노",
+      "요리",
+      "산책"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 31,
+      "age_max": 38
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v08",
+    "name": "다은",
+    "gender": "여",
+    "age": 26,
+    "region": "서울",
+    "mbti": "INFP",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "출판사에서 편집자로 일해요. 퇴근길에 에세이 읽는 게 소소한 행복이고 영화관 혼자 가는 것도 좋아해요.",
+    "values": "서로 대화를 많이 나누고 생각을 공유하는 관계가 좋아요. 천천히 깊어지는 사이를 원해요.",
+    "ideal": "생각이 깊고 이야기를 잘 들어주는 사람. 같이 영화 보고 이야기 나눌 수 있는 사람.",
+    "interests": [
+      "에세이",
+      "영화",
+      "글쓰기",
+      "산책"
+    ],
+    "prefer": {
+      "gender": "남",
+      "age_min": 25,
+      "age_max": 32
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v09",
+    "name": "도윤",
+    "gender": "남",
+    "age": 28,
+    "region": "서울",
+    "mbti": "ISTJ",
+    "smoking": false,
+    "drinking": "가끔",
+    "bio": "회계사로 일하고 있어요. 주말엔 헬스장 가고 맛집 탐방해요.",
+    "values": "신뢰가 가장 중요하다고 생각해요. 약속을 잘 지키는 사람이 좋아요.",
+    "ideal": "밝고 긍정적인 사람.",
+    "interests": [
+      "헬스",
+      "맛집",
+      "골프"
+    ],
+    "prefer": {
+      "gender": "여",
+      "age_min": 24,
+      "age_max": 30
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v10",
+    "name": "시우",
+    "gender": "남",
+    "age": 27,
+    "region": "경기",
+    "mbti": "ENTP",
+    "smoking": false,
+    "drinking": "자주",
+    "bio": "밴드에서 기타 쳐요. 공연 보러 다니는 것도 좋아하고 사람들이랑 술 한잔 하는 걸 즐겨요.",
+    "values": "자유롭고 서로 구속하지 않는 연애가 좋아요.",
+    "ideal": "음악 좋아하고 같이 공연 보러 다닐 수 있는 사람.",
+    "interests": [
+      "기타",
+      "인디 음악",
+      "공연",
+      "여행"
+    ],
+    "prefer": {
+      "gender": "여",
+      "age_min": 23,
+      "age_max": 30
+    },
+    "source": "virtual"
+  },
+  {
+    "id": "v11", "name": "준호", "gender": "남", "age": 29, "region": "서울", "mbti": "INFP",
+    "smoking": false, "drinking": "가끔",
+    "bio": "번역가로 일하고 있어요. 집 근처 도서관과 작은 서점을 자주 가고, 밤에는 고전 영화를 챙겨 봐요.",
+    "values": "서로의 이야기를 끝까지 들어주는 관계가 좋아요. 조급하지 않게 천천히 가까워지고 싶어요.",
+    "ideal": "책 읽는 걸 좋아하고 감성이 풍부한 사람. 함께 조용한 시간을 보내도 편한 사람.",
+    "interests": ["독서", "고전 영화", "글쓰기", "산책"],
+    "prefer": {"gender": "여", "age_min": 24, "age_max": 31}, "source": "virtual"
+  },
+  {
+    "id": "v12", "name": "태민", "gender": "남", "age": 26, "region": "경기", "mbti": "ESTP",
+    "smoking": false, "drinking": "가끔",
+    "bio": "체육 트레이너예요. 주말엔 서핑이나 클라이밍을 하고 시즌엔 스노보드 타러 가요.",
+    "values": "함께 땀 흘리며 새로운 걸 도전하는 관계가 좋아요. 건강한 생활 습관이 중요해요.",
+    "ideal": "활동적이고 운동을 좋아하는 사람. 같이 여행 다니면서 새로운 경험을 할 수 있는 사람.",
+    "interests": ["서핑", "클라이밍", "스노보드", "캠핑"],
+    "prefer": {"gender": "여", "age_min": 23, "age_max": 29}, "source": "virtual"
+  },
+  {
+    "id": "v13", "name": "현우", "gender": "남", "age": 31, "region": "서울", "mbti": "ENTJ",
+    "smoking": false, "drinking": "가끔",
+    "bio": "IT 회사에서 팀장으로 일해요. 출근 전에 러닝하고 주말엔 경제 공부하면서 투자 계획을 세워요.",
+    "values": "결혼을 생각하고 진지하게 만나고 싶어요. 서로의 목표를 존중하고 함께 미래를 설계하는 관계가 좋아요.",
+    "ideal": "자기 일에 책임감 있고 계획적인 사람. 미래에 대한 생각이 비슷한 사람.",
+    "interests": ["러닝", "재테크", "독서", "와인"],
+    "prefer": {"gender": "여", "age_min": 26, "age_max": 33}, "source": "virtual"
+  },
+  {
+    "id": "v14", "name": "민재", "gender": "남", "age": 27, "region": "서울", "mbti": "ENFP",
+    "smoking": false, "drinking": "자주",
+    "bio": "광고 회사에서 카피라이터로 일해요. 페스티벌과 공연은 빠짐없이 챙기고 친구들이랑 노는 걸 좋아해요.",
+    "values": "연애도 인생도 재밌게! 같이 웃을 일이 많은 관계가 최고라고 생각해요.",
+    "ideal": "밝고 유머 감각 있는 사람. 같이 놀러 다니는 걸 좋아하는 사람.",
+    "interests": ["음악 페스티벌", "공연", "여행", "맛집"],
+    "prefer": {"gender": "여", "age_min": 23, "age_max": 30}, "source": "virtual"
+  },
+  {
+    "id": "v15", "name": "승현", "gender": "남", "age": 25, "region": "부산", "mbti": "ISFJ",
+    "smoking": false, "drinking": "안 마심",
+    "bio": "동물병원에서 수의테크니션으로 일해요. 강아지 한 마리 키우고 쉬는 날엔 베이킹을 해요.",
+    "values": "다정함과 배려가 제일 중요해요. 작은 기념일도 챙겨주는 따뜻한 연애를 하고 싶어요.",
+    "ideal": "마음이 따뜻하고 동물을 아끼는 사람.",
+    "interests": ["강아지", "베이킹", "보드게임", "그림"],
+    "prefer": {"gender": "여", "age_min": 22, "age_max": 28}, "source": "virtual"
+  },
+  {
+    "id": "v16", "name": "재원", "gender": "남", "age": 28, "region": "서울", "mbti": "INTP",
+    "smoking": false, "drinking": "가끔",
+    "bio": "백엔드 개발자예요. 퇴근 후엔 인디 게임을 하거나 SF 소설을 읽고, 가끔 사이드 프로젝트도 만들어요.",
+    "values": "각자의 시간을 존중하면서도 관심사를 깊게 나눌 수 있는 관계가 좋아요.",
+    "ideal": "호기심이 많고 대화가 잘 통하는 사람. 게임이나 SF를 같이 즐기면 더 좋아요.",
+    "interests": ["게임", "SF 소설", "코딩", "보드게임"],
+    "prefer": {"gender": "상관없음", "age_min": 24, "age_max": 32}, "source": "virtual"
+  },
+  {
+    "id": "v17", "name": "지환", "gender": "남", "age": 33, "region": "서울", "mbti": "ESFJ",
+    "smoking": false, "drinking": "가끔",
+    "bio": "고등학교 국어 선생님이에요. 주말엔 지역 아동센터에서 봉사하고 요리하는 걸 좋아해요.",
+    "values": "가족을 소중히 여기고 서로 배려하는 따뜻한 가정을 꾸리고 싶어요.",
+    "ideal": "다정하고 아이들을 좋아하는 사람. 함께 가정을 꾸릴 수 있는 사람.",
+    "interests": ["봉사활동", "요리", "독서", "피아노"],
+    "prefer": {"gender": "여", "age_min": 27, "age_max": 34}, "source": "virtual"
+  },
+  {
+    "id": "v18", "name": "우진", "gender": "남", "age": 30, "region": "대구", "mbti": "ISTP",
+    "smoking": true, "drinking": "자주",
+    "bio": "자동차 정비소를 운영해요. 오토바이 타고 투어 다니는 게 취미고 캠핑장에서 불멍하는 걸 좋아해요.",
+    "values": "말보다 행동으로 보여주는 관계가 좋아요. 서로 너무 간섭하지 않았으면 해요.",
+    "ideal": "털털하고 솔직한 사람. 같이 캠핑이나 투어를 다닐 수 있으면 좋겠어요.",
+    "interests": ["오토바이", "캠핑", "낚시", "자동차"],
+    "prefer": {"gender": "여", "age_min": 25, "age_max": 33}, "source": "virtual"
+  },
+  {
+    "id": "v19", "name": "소연", "gender": "여", "age": 27, "region": "서울", "mbti": "ISFJ",
+    "smoking": false, "drinking": "가끔",
+    "bio": "간호사로 일해요. 쉬는 날엔 동네 카페에서 커피 마시면서 영화 리뷰를 쓰거나 소설을 읽어요.",
+    "values": "대화를 많이 나누고 서로의 하루를 궁금해하는 관계가 좋아요. 천천히 신뢰를 쌓고 싶어요.",
+    "ideal": "차분하고 배려심 있는 사람. 영화나 책 이야기를 편하게 나눌 수 있는 사람.",
+    "interests": ["영화", "소설", "커피", "등산"],
+    "prefer": {"gender": "남", "age_min": 26, "age_max": 33}, "source": "virtual"
+  },
+  {
+    "id": "v20", "name": "가은", "gender": "여", "age": 30, "region": "인천", "mbti": "ENTJ",
+    "smoking": false, "drinking": "자주",
+    "bio": "마케팅 회사를 직접 운영하고 있어요. 일 욕심이 많고 주말엔 골프나 와인 모임에 나가요.",
+    "values": "각자 커리어에 집중하면서 서로에게 자극이 되는 관계가 좋아요.",
+    "ideal": "야망 있고 자기 분야에서 인정받는 사람. 자신감 있는 사람이 좋아요.",
+    "interests": ["골프", "와인", "재테크", "자기계발"],
+    "prefer": {"gender": "남", "age_min": 29, "age_max": 37}, "source": "virtual"
+  }
+]

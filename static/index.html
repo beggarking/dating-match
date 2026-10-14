@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Match Lab</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#222; --sub:#777; --line:#e4e2dd; --accent:#e0526b; --good:#2e8b57; --warn:#c77700; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; font-size:14px; }
+  header { padding:16px 24px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { margin:0; font-size:20px; } header span { color:var(--sub); }
+  main { display:grid; grid-template-columns:360px 1fr; gap:20px; padding:20px 24px; max-width:1200px; margin:auto; }
+  @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
+  h2 { font-size:15px; margin:0 0 12px; }
+  label { display:block; font-size:12px; color:var(--sub); margin:8px 0 3px; }
+  input, select, textarea { width:100%; padding:7px 8px; border:1px solid var(--line); border-radius:6px; font:inherit; }
+  textarea { min-height:56px; resize:vertical; }
+  .row { display:flex; gap:8px; } .row > * { flex:1; }
+  button { padding:8px 12px; border:0; border-radius:6px; background:var(--ink); color:#fff; font:inherit; cursor:pointer; }
+  button.ghost { background:none; color:var(--ink); border:1px solid var(--line); }
+  button.primary { background:var(--accent); width:100%; padding:11px; font-size:15px; margin-top:4px; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; } .tabs button.on { background:var(--accent); }
+  .pool li { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--line); }
+  .pool ul { list-style:none; margin:0; padding:0; max-height:260px; overflow:auto; }
+  .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); margin-left:4px; }
+  .tag.friend { background:#ffe6ea; color:var(--accent); }
+  .result { display:grid; grid-template-columns:64px 1fr; gap:12px; }
+  .score { text-align:center; } .score b { display:block; font-size:26px; color:var(--accent); } .score small { color:var(--sub); }
+  .bars div { display:grid; grid-template-columns:100px 1fr 64px; gap:8px; align-items:center; font-size:12px; margin:3px 0; }
+  .bar { height:8px; background:#eee; border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
+  ul.why { margin:8px 0 0; padding-left:18px; } ul.why li.good::marker { content:"✓ "; color:var(--good); } ul.why li.warn::marker { content:"! "; color:var(--warn); }
+  .pairs { margin-top:8px; font-size:12px; color:var(--sub); } .pairs q { color:var(--ink); }
+  .meta { color:var(--sub); font-size:12px; } .headline { font-weight:600; margin:6px 0; }
+  details { margin-top:8px; } summary { cursor:pointer; color:var(--sub); font-size:12px; }
+  .empty { color:var(--sub); text-align:center; padding:40px 0; }
+</style>
+</head>
+<body>
+<header><h1>💘 Match Lab</h1> <span>임베딩 기반 소개팅 추천 — 추천 결과와 그 이유를 함께 보여줍니다</span></header>
+<main>
+  <section>
+    <div class="card">
+      <div class="tabs">
+        <button id="tabMe" class="on" onclick="switchTab('me')">① 내 프로필</button>
+        <button id="tabFriend" onclick="switchTab('friend')">② 친구 추가</button>
+      </div>
+      <form id="form" onsubmit="return false">
+        <div class="row">
+          <div><label>이름</label><input name="name" required></div>
+          <div><label>성별</label><select name="gender"><option>남</option><option>여</option></select></div>
+          <div><label>나이</label><input name="age" type="number" value="27"></div>
+        </div>
+        <div class="row">
+          <div><label>지역</label><input name="region" value="서울"></div>
+          <div><label>MBTI</label><input name="mbti"></div>
+        </div>
+        <div class="row">
+          <div><label>흡연</label><select name="smoking"><option value="false">비흡연</option><option value="true">흡연</option></select></div>
+          <div><label>음주</label><select name="drinking"><option>안 마심</option><option selected>가끔</option><option>자주</option></select></div>
+        </div>
+        <label>자기소개</label><textarea name="bio"></textarea>
+        <label>가치관 / 연애관</label><textarea name="values"></textarea>
+        <label>이상형</label><textarea name="ideal"></textarea>
+        <label>관심사 (쉼표로 구분)</label><input name="interests" placeholder="독서, 영화, 등산">
+        <div class="row">
+          <div><label>선호 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select></div>
+          <div><label>선호 나이</label><div class="row"><input name="pmin" type="number" value="24"><input name="pmax" type="number" value="32"></div></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="ghost" type="button" id="sampleBtn" onclick="fillSample()">예시 채우기</button>
+          <button type="button" id="saveBtn" onclick="save()">내 프로필 저장</button>
+        </div>
+      </form>
+    </div>
+    <div class="card pool">
+      <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
+      <ul id="pool"></ul>
+    </div>
+  </section>
+
+  <section>
+    <button class="primary" onclick="runMatch()">추천 받기</button>
+    <div class="card" style="margin-top:16px">
+      <h2>추천 로직</h2>
+      <div class="meta">
+        각 프로필의 자기소개·가치관·이상형·관심사를 다국어 임베딩 모델로 벡터화한 뒤 나와 1:1로 비교합니다.<br>
+        <b>총점 = Σ 가중치 × 항목점수 × 100</b> &nbsp;|&nbsp; 서로의 선호 성별·나이 조건을 통과하지 못하면 점수 계산 없이 제외합니다.
+      </div>
+      <div class="bars" id="weights" style="margin-top:8px"></div>
+    </div>
+    <div id="results"><div class="empty">내 프로필을 저장하고 “추천 받기”를 눌러주세요.</div></div>
+  </section>
+</main>
+
+<script>
+let mode = 'me';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const WEIGHT_DESC = {
+  ideal: '내 이상형 ↔ 상대 자기서술, 상대 이상형 ↔ 내 자기서술의 조화평균',
+  values: '가치관 글 임베딩 유사도',
+  interests: '관심사 단어별 임베딩으로 의미가 가까운 짝 찾기',
+  bio: '자기소개 글 임베딩 유사도',
+  lifestyle: '나이차 · 지역 · 흡연 · 음주 (규칙)',
+};
+
+function switchTab(m) {
+  mode = m;
+  $('#tabMe').classList.toggle('on', m === 'me');
+  $('#tabFriend').classList.toggle('on', m === 'friend');
+  $('#saveBtn').textContent = m === 'me' ? '내 프로필 저장' : '저장소에 친구 추가';
+  $('#sampleBtn').style.display = m === 'me' ? '' : 'none';
+  $('#form').reset();
+  if (m === 'me') loadMe();
+}
+
+function readForm() {
+  const f = Object.fromEntries(new FormData($('#form')));
+  return {
+    name: f.name, gender: f.gender, age: +f.age, region: f.region, mbti: f.mbti,
+    smoking: f.smoking === 'true', drinking: f.drinking, bio: f.bio, values: f.values, ideal: f.ideal,
+    interests: f.interests.split(',').map(s => s.trim()).filter(Boolean),
+    prefer: { gender: f.pgender, age_min: +f.pmin, age_max: +f.pmax },
+    source: mode === 'me' ? 'me' : 'friend',
+  };
+}
+
+function fillForm(p) {
+  const f = $('#form').elements;
+  for (const k of ['name','gender','age','region','mbti','drinking','bio','values','ideal']) f[k].value = p[k] ?? '';
+  f.smoking.value = String(!!p.smoking);
+  f.interests.value = (p.interests || []).join(', ');
+  f.pgender.value = p.prefer?.gender ?? '상관없음';
+  f.pmin.value = p.prefer?.age_min ?? 19;
+  f.pmax.value = p.prefer?.age_max ?? 60;
+}
+
+function fillSample() {
+  fillForm({
+    name: '지훈', gender: '남', age: 28, region: '서울', mbti: 'INTJ', smoking: false, drinking: '가끔',
+    bio: '개발자로 일하고 있어요. 퇴근 후엔 동네 카페에서 소설 읽거나 영화 보는 걸 좋아해요. 가끔 등산도 가요.',
+    values: '대화가 잘 통하고 서로를 응원해주는 관계가 좋아요. 천천히 알아가고 싶어요.',
+    ideal: '차분하고 생각이 깊은 사람. 책이나 영화 이야기를 같이 나눌 수 있으면 좋겠어요.',
+    interests: ['소설', '영화', '등산', '커피'],
+    prefer: { gender: '여', age_min: 24, age_max: 31 },
+  });
+}
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok) throw new Error((await r.json()).detail ?? r.statusText);
+  return r.json();
+}
+
+async function save() {
+  if (!$('#form').reportValidity()) return;
+  const p = readForm();
+  try {
+    if (mode === 'me') { await api('/api/me', { method: 'PUT', body: JSON.stringify(p) }); alert('내 프로필을 저장했어요.'); }
+    else { await api('/api/profiles', { method: 'POST', body: JSON.stringify(p) }); $('#form').reset(); loadPool(); }
+  } catch (e) { alert('저장 실패: ' + e.message); }
+}
+
+async function loadMe() { const me = await api('/api/me'); if (me) fillForm(me); }
+
+async function loadPool() {
+  const list = await api('/api/profiles');
+  $('#poolCount').textContent = `${list.length}명 (가상 ${list.filter(p => p.source === 'virtual').length} · 친구 ${list.filter(p => p.source === 'friend').length})`;
+  $('#pool').innerHTML = list.map(p => `
+    <li><span>${esc(p.name)} <span class="meta">${p.gender} · ${p.age} · ${esc(p.region)}</span>
+      <span class="tag ${p.source}">${p.source === 'friend' ? '친구' : '가상'}</span></span>
+      <button class="ghost" onclick="del('${p.id}')">삭제</button></li>`).join('');
+}
+
+async function del(id) { if (confirm('삭제할까요?')) { await api('/api/profiles/' + id, { method: 'DELETE' }); loadPool(); } }
+
+function renderWeights(logic) {
+  $('#weights').innerHTML = logic.weights.map(w => `
+    <div><span>${w.label}</span><span class="meta">${WEIGHT_DESC[w.key]}</span><b>${Math.round(w.weight * 100)}%</b></div>`).join('');
+}
+
+async function runMatch() {
+  $('#results').innerHTML = '<div class="empty">임베딩 비교 중…</div>';
+  let data;
+  try { data = await api('/api/match', { method: 'POST' }); }
+  catch (e) { $('#results').innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  renderWeights(data.logic);
+  const cards = data.results.map(r => {
+    const p = r.profile;
+    return `<div class="card result">
+      <div class="score"><small>#${r.rank}</small><b>${Math.round(r.total)}</b><small>/ 100</small></div>
+      <div>
+        <div><b style="font-size:16px">${esc(p.name)}</b> <span class="meta">${p.gender} · ${p.age}세 · ${esc(p.region)} · ${esc(p.mbti)}</span>
+          <span class="tag ${p.source}">${p.source === 'friend' ? '친구' : '가상'}</span></div>
+        <div class="meta">${esc(p.bio)}</div>
+        <div class="headline">${esc(r.headline)}</div>
+        <div class="bars">${r.breakdown.map(b => `
+          <div><span>${b.label}</span><span class="bar"><i style="width:${b.score * 100}%"></i></span><span>${b.points} / ${b.weight * 100}</span></div>`).join('')}</div>
+        <ul class="why">
+          ${r.reasons.map(x => `<li class="good">${esc(x)}</li>`).join('')}
+          ${r.cautions.map(x => `<li class="warn">${esc(x)}</li>`).join('')}
+        </ul>
+        ${r.sentence_pairs.length ? `<div class="pairs">비슷한 문장 —
+          ${r.sentence_pairs.map(s => `<div>나: <q>${esc(s.mine)}</q> ↔ 상대: <q>${esc(s.theirs)}</q> (${s.sim})</div>`).join('')}</div>` : ''}
+        <details><summary>계산 상세</summary><div class="meta">
+          내 이상형→상대 ${Math.round(r.ideal.to_them * 100)}% · 상대 이상형→나 ${Math.round(r.ideal.to_me * 100)}%<br>
+          관심사 매칭: ${r.interest_pairs.map(x => `${esc(x.mine)}↔${esc(x.theirs)}(${x.sim})`).join(', ') || '없음'}<br>
+          생활 조건: ${r.lifestyle.map(d => `${d.item} ${esc(d.value)} → ${d.score}`).join(' · ')}
+        </div></details>
+      </div></div>`;
+  }).join('');
+  const excluded = data.excluded.length ? `<div class="card"><details><summary>필수 조건으로 제외된 ${data.excluded.length}명</summary>
+    <ul>${data.excluded.map(e => `<li>${esc(e.profile.name)} — ${e.reasons.map(esc).join(', ')}</li>`).join('')}</ul></details></div>` : '';
+  $('#results').innerHTML = (cards || '<div class="empty">조건에 맞는 상대가 없어요.</div>') + excluded;
+}
+
+loadMe(); loadPool();
+api('/api/match', { method: 'POST' }).then(d => renderWeights(d.logic)).catch(() => {});
+</script>
+</body>
+</html>
