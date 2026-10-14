@@ -37,6 +37,8 @@
   .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:40px 0; }
   .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); }
   .tag.friend { background:#ffe6ea; color:var(--accent); }
+  #meCard dl { display:grid; grid-template-columns:70px 1fr; gap:4px 8px; margin:8px 0 12px; font-size:13px; }
+  #meCard dt { color:var(--sub); } #meCard dd { margin:0; }
 </style>
 </head>
 <body>
@@ -68,7 +70,7 @@
         </div>
         <div class="row" style="margin-top:14px" id="meButtons">
           <button class="ghost" type="button" id="sampleBtn">예시 채우기</button>
-          <button class="primary" type="button" id="matchBtn">추천 받기</button>
+          <button class="primary" type="button" id="saveMeBtn">내 정보 등록</button>
         </div>
         <div class="row" style="margin-top:14px; display:none" id="friendButtons">
           <button class="primary" type="button" id="addBtn">저장소에 친구 추가</button>
@@ -82,9 +84,9 @@
     </div>
   </section>
 
-  <section id="out">
-    <div class="card empty">내 정보를 입력하고 “추천 받기”를 눌러주세요.<br>(“예시 채우기”로 바로 체험할 수 있어요)</div>
-    <div class="card" id="howto"></div>
+  <section>
+    <div class="card" id="meCard"></div>
+    <div id="out"><div class="card" id="howto"></div></div>
   </section>
 </main>
 
@@ -323,10 +325,51 @@ function renderPool() {
     : "아직 추가한 친구가 없어요.";
 }
 
-function runMatch() {
+function saveMe() {
   const me = { ...readForm(), id: "me" };
   if (!validate(me)) return;
   store.set("me", me);
+  renderMe();
+  $("#meCard").scrollIntoView({ behavior: "smooth" });
+}
+
+function renderMe() {
+  const me = store.get("me", null);
+  $("#saveMeBtn").textContent = me ? "내 정보 수정 저장" : "내 정보 등록";
+  if (!me) {
+    $("#meCard").innerHTML = `<h2>내 정보</h2>
+      <div class="meta">아직 등록된 내 정보가 없어요. 왼쪽에 입력하고 <b>“내 정보 등록”</b>을 눌러주세요.<br>
+      (“예시 채우기”로 예시 정보를 넣어볼 수도 있어요)</div>`;
+    return;
+  }
+  const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
+  $("#meCard").innerHTML = `<h2>내 정보 <span class="tag">등록됨</span></h2>
+    <dl>
+      <dt>이름</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)} · ${me.smoking ? "흡연" : "비흡연"} · 음주 ${esc(me.drinking)}</span></dd>
+      ${me.intro ? `<dt>소개</dt><dd>${esc(me.intro)}</dd>` : ""}
+      <dt>관심사</dt><dd>${me.interests.map(esc).join(", ")}</dd>
+      <dt>가치관</dt><dd>${ans}</dd>
+      <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)} · ${me.prefer.age_min}~${me.prefer.age_max}세</dd>
+    </dl>
+    <div class="row">
+      <button class="ghost" type="button" id="editMeBtn">수정</button>
+      <button class="ghost" type="button" id="delMeBtn">삭제</button>
+      <button class="primary" type="button" id="matchBtn" style="flex:2">추천 받기</button>
+    </div>`;
+  $("#editMeBtn").onclick = () => { switchTab("me"); $("#form").scrollIntoView({ behavior: "smooth" }); };
+  $("#delMeBtn").onclick = () => {
+    if (!confirm("등록된 내 정보를 삭제할까요?")) return;
+    try { localStorage.removeItem("matchlab.me"); } catch {}
+    switchTab("me");
+    renderMe();
+    $("#out").innerHTML = $("#howto").outerHTML;
+  };
+  $("#matchBtn").onclick = runMatch;
+}
+
+function runMatch() {
+  const me = store.get("me", null);
+  if (!me) { alert("먼저 내 정보를 등록해주세요."); return; }
   const { filtered, scored } = recommend(me, pool());
   const out = $("#out");
   if (!scored.length) {
@@ -383,7 +426,7 @@ $("#sampleBtn").onclick = () => fillForm({
   intro: "퇴근 후엔 동네 카페에서 소설 읽거나 영화 봐요", interests: ["독서", "영화", "카페", "등산"],
   answers: { pace: 2, contact: 3, weekend: 2, energy: 2, goal: 3 }, prefer: { gender: "여", age_min: 24, age_max: 31 },
 });
-$("#matchBtn").onclick = runMatch;
+$("#saveMeBtn").onclick = saveMe;
 $("#addBtn").onclick = addFriend;
 $("#friendList").onclick = e => {
   const id = e.target.dataset.del;
@@ -393,6 +436,7 @@ $("#friendList").onclick = e => {
   renderPool();
 };
 switchTab("me");
+renderMe();
 renderPool();
 </script>
 </body>
