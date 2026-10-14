@@ -31,6 +31,14 @@
   td:nth-child(2) { text-align:left; } tr.first td { background:#fff4f6; font-weight:600; }
   .winner .total { font-size:32px; color:var(--accent); font-weight:700; }
   .bars div { display:grid; grid-template-columns:80px 1fr 60px; gap:8px; align-items:center; font-size:12px; margin:4px 0; }
+  .slider { display:grid; grid-template-columns:70px 1fr 56px; gap:10px; align-items:center; margin:6px 0; font-size:13px; }
+  .slider input { padding:0; accent-color:var(--accent); } .slider output { text-align:right; font-weight:600; }
+  .winner-top { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:10px; }
+  .winner-top svg { flex:none; } .winner-top .scorebox { flex:1; min-width:240px; }
+  .radar-legend { font-size:12px; color:var(--sub); text-align:center; }
+  .radar-legend b { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 10px; vertical-align:-1px; }
+  .up { color:var(--good); font-weight:600; } .down { color:var(--warn); font-weight:600; }
+  .note { background:#fff4f6; border-radius:6px; padding:8px 10px; font-size:13px; margin-top:10px; }
   .bar { height:8px; background:#eee; border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
   ul { margin:4px 0; padding-left:18px; } li { margin:3px 0; }
   li.good::marker { content:"✓ "; color:var(--good); } li.warn::marker { content:"! "; color:var(--warn); }
@@ -87,6 +95,14 @@
 
   <section>
     <div class="card" id="meCard"></div>
+    <div class="card" id="weightCard">
+      <h2>내 기준 조정 <span class="meta">무엇을 더 중요하게 볼까요?</span></h2>
+      <div id="sliders"></div>
+      <div class="row" style="align-items:center; margin-top:8px">
+        <div class="meta" style="flex:3">움직이면 순위가 바로 다시 계산돼요. 점수표의 ▲▼는 기본 기준(40·40·20) 대비 순위 변화예요.</div>
+        <button class="ghost" type="button" id="resetW">기본값</button>
+      </div>
+    </div>
     <div id="out"><div class="card" id="howto"></div></div>
   </section>
 </main>
@@ -124,8 +140,9 @@ const QUESTIONS = [
 const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "기타"];
 const DRINK = { "안 마심": 0, "가끔": 1, "자주": 2 };
 
-// 점수 배분 (총 100점)
-const POINTS = { interest: 40, values: 40, life: 20 };
+// 점수 배분 (총 100점) — "내 기준 조정" 슬라이더로 바꿀 수 있다
+const DEFAULT_POINTS = { interest: 40, values: 40, life: 20 };
+const POINTS = { ...DEFAULT_POINTS };
 
 // ═══════════════════════════════════════════════════════════════════
 // 2. 프로필 저장소: 가상 프로필 20명 (+ 브라우저에 등록한 정보)
@@ -186,8 +203,8 @@ function filterReasons(me, o) {
   return r;
 }
 
-function scoreOne(me, o) {
-  // (1) 관심사: 임베딩 벡터 코사인 유사도 → 40점
+function scoreOne(me, o, W = POINTS) {
+  // (1) 관심사: 임베딩 벡터 코사인 유사도 → 40점 (기본)
   const mv = embedInterests(me.interests), ov = embedInterests(o.interests);
   const interestSim = cosine(mv, ov);
   const same = me.interests.filter(x => o.interests.includes(x));
@@ -212,9 +229,9 @@ function scoreOne(me, o) {
   const lifeSim = life.reduce((s, x) => s + x.s, 0) / life.length;
 
   const pts = {
-    interest: +(interestSim * POINTS.interest).toFixed(1),
-    values: +(valuesSim * POINTS.values).toFixed(1),
-    life: +(lifeSim * POINTS.life).toFixed(1),
+    interest: +(interestSim * W.interest).toFixed(1),
+    values: +(valuesSim * W.values).toFixed(1),
+    life: +(lifeSim * W.life).toFixed(1),
   };
   return {
     profile: o, pts, total: +(pts.interest + pts.values + pts.life).toFixed(1),
@@ -222,12 +239,12 @@ function scoreOne(me, o) {
   };
 }
 
-function recommend(me, pool) {
+function recommend(me, pool, W = POINTS) {
   const filtered = [], scored = [];
   for (const o of pool) {
     const reasons = filterReasons(me, o);
     if (reasons.length) filtered.push({ profile: o, reasons });
-    else scored.push(scoreOne(me, o));
+    else scored.push(scoreOne(me, o, W));
   }
   scored.sort((a, b) => b.total - a.total);
   return { filtered, scored };
@@ -272,13 +289,68 @@ $("#interests").innerHTML = Object.keys(INTEREST_VEC).map(it => `<label><input t
 $("#questions").innerHTML = QUESTIONS.map(q => `
   <div class="q"><span>${q.label}</span>
     <select name="q_${q.key}">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 3 ? "selected" : ""}>${n}${n === 1 ? " " + q.low : n === 5 ? " " + q.high : ""}</option>`).join("")}</select></div>`).join("");
-$("#howto").innerHTML = `<h2>점수 계산 방법 (100점)</h2>
+function renderHowto() {
+  $("#howto").innerHTML = `<h2>점수 계산 방법 (100점)</h2>
   <ul>
     <li><b>걸러내기</b> — 본인, 서로 원하는 성별·나이가 안 맞는 사람은 점수 계산 전에 제외</li>
     <li><b>관심사 ${POINTS.interest}점</b> — 관심사를 6가지 성향 축(${AXES.join(", ")}) 벡터로 임베딩해 코사인 유사도 계산</li>
     <li><b>가치관 ${POINTS.values}점</b> — 5개 질문 답(1~5)의 차이가 작을수록 높음</li>
     <li><b>생활 조건 ${POINTS.life}점</b> — 나이차 · 지역 · 흡연 · 음주</li>
   </ul>`;
+}
+renderHowto();
+
+// ── 레이더 차트: 6가지 성향 축 위에 나와 상대의 취향 모양을 겹쳐 그린다 (SVG) ──
+function radarSVG(mine, theirs, theirName) {
+  const size = 240, c = size / 2, R = 78;
+  const shape = v => { const m = Math.max(...v); return v.map(x => (m ? Math.sqrt(x / m) : 0)); }; // 가장 큰 축을 1로 맞추고, 작은 값도 보이게 제곱근으로 펼침
+  const pt = (i, r) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / AXES.length;
+    return [c + Math.cos(a) * R * r, c + Math.sin(a) * R * r];
+  };
+  const poly = (v, color) => `<polygon points="${shape(v).map((r, i) => pt(i, r).join(",")).join(" ")}"
+    fill="${color}" fill-opacity="0.22" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+  const rings = [0.25, 0.5, 0.75, 1].map(r =>
+    `<polygon points="${AXES.map((_, i) => pt(i, r).join(",")).join(" ")}" fill="none" stroke="#e4e2dd"/>`).join("");
+  const spokes = AXES.map((_, i) => `<line x1="${c}" y1="${c}" x2="${pt(i, 1)[0]}" y2="${pt(i, 1)[1]}" stroke="#e4e2dd"/>`).join("");
+  const labels = AXES.map((ax, i) => {
+    const [x, y] = pt(i, 1.28);
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${ax}</text>`;
+  }).join("");
+  return `<div><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="취향 레이더 차트">
+    ${rings}${spokes}${poly(mine, "#4a7bd0")}${poly(theirs, "#e0526b")}${labels}</svg>
+    <div class="radar-legend"><b style="background:#4a7bd0"></b>나<b style="background:#e0526b"></b>${esc(theirName)}</div></div>`;
+}
+
+// ── 내 기준 조정 슬라이더 ──
+const SLIDERS = [
+  { key: "interest", label: "관심사" },
+  { key: "values", label: "가치관" },
+  { key: "life", label: "생활 조건" },
+];
+let lastMe = null; // 마지막으로 추천받은 내 정보 (슬라이더를 움직이면 이걸로 다시 계산)
+
+$("#sliders").innerHTML = SLIDERS.map(s => `
+  <div class="slider"><span>${s.label}</span>
+    <input type="range" min="0" max="10" step="1" value="${DEFAULT_POINTS[s.key] / 10}" data-key="${s.key}">
+    <output id="out_${s.key}">${DEFAULT_POINTS[s.key]}점</output></div>`).join("");
+
+function applySliders() {
+  const raw = Object.fromEntries([...document.querySelectorAll("#sliders input")].map(x => [x.dataset.key, +x.value]));
+  const sum = Object.values(raw).reduce((a, b) => a + b, 0);
+  for (const s of SLIDERS) {
+    POINTS[s.key] = sum ? Math.round((raw[s.key] / sum) * 1000) / 10 : Math.round(1000 / SLIDERS.length) / 10;
+    $("#out_" + s.key).textContent = POINTS[s.key] + "점";
+  }
+  renderHowto();
+  if (lastMe) runMatch(lastMe, { scroll: false });
+}
+$("#sliders").oninput = applySliders;
+$("#resetW").onclick = () => {
+  document.querySelectorAll("#sliders input").forEach(x => (x.value = DEFAULT_POINTS[x.dataset.key] / 10));
+  applySliders();
+};
+const isDefaultPoints = () => SLIDERS.every(s => POINTS[s.key] === DEFAULT_POINTS[s.key]);
 
 function readForm() {
   const f = Object.fromEntries(new FormData($("#form")));
@@ -377,24 +449,40 @@ function matchFromForm() {
   if (validate(me)) runMatch(me);
 }
 
-function runMatch(me) {
+function runMatch(me, { scroll = true } = {}) {
+  lastMe = me;
   const { filtered, scored } = recommend(me, pool());
   const out = $("#out");
   if (!scored.length) {
     out.innerHTML = `<div class="card empty">조건에 맞는 상대가 없어요.</div>` + filteredCard(filtered) + $("#howto").outerHTML;
     return;
   }
+  // 기본 기준(40·40·20)일 때의 순위 — 슬라이더로 바꾼 기준과 비교용
+  const baseRank = new Map(recommend(me, pool(), DEFAULT_POINTS).scored.map((s, i) => [s.profile.id, i + 1]));
+  const baseWinner = [...baseRank].find(([, r]) => r === 1)[0];
+  const changed = !isDefaultPoints();
+  const rankDelta = (s, i) => {
+    const d = baseRank.get(s.profile.id) - (i + 1);
+    return d > 0 ? `<span class="up">▲${d}</span>` : d < 0 ? `<span class="down">▼${-d}</span>` : `<span class="meta">–</span>`;
+  };
+
   const w = scored[0], why = explainWinner(me, w, scored[1]);
-  const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${(v / max) * 100}%"></i></span><span>${v} / ${max}</span></div>`;
+  const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${max ? (v / max) * 100 : 0}%"></i></span><span>${v} / ${max}</span></div>`;
   out.innerHTML = `
     <div class="card winner">
       <h2>🏆 1위 추천: ${esc(w.profile.name)} <span class="tag ${w.profile.source === "friend" ? "friend" : ""}">${w.profile.source === "friend" ? "등록" : "가상"}</span></h2>
       <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
       ${w.profile.intro ? `<div class="meta">“${esc(w.profile.intro)}”</div>` : ""}
-      <div style="display:flex; gap:20px; align-items:center; margin-top:10px">
-        <div class="total">${w.total}<span class="meta"> / 100</span></div>
-        <div class="bars" style="flex:1">${bar("관심사", w.pts.interest, POINTS.interest)}${bar("가치관", w.pts.values, POINTS.values)}${bar("생활 조건", w.pts.life, POINTS.life)}</div>
+      <div class="winner-top">
+        ${radarSVG(w.detail.mv, w.detail.ov, w.profile.name)}
+        <div class="scorebox">
+          <div class="total">${w.total}<span class="meta"> / 100</span></div>
+          <div class="bars">${bar("관심사", w.pts.interest, POINTS.interest)}${bar("가치관", w.pts.values, POINTS.values)}${bar("생활 조건", w.pts.life, POINTS.life)}</div>
+          <div class="meta" style="margin-top:6px">레이더: 관심사를 6가지 성향으로 임베딩한 모양이에요. 두 모양이 많이 겹칠수록 관심사 점수가 높아요 (유사도 ${Math.round(w.detail.interestSim * 100)}%).</div>
+        </div>
       </div>
+      ${changed ? `<div class="note">현재 기준: 관심사 ${POINTS.interest} · 가치관 ${POINTS.values} · 생활 조건 ${POINTS.life}점 —
+        ${baseWinner === w.profile.id ? "기본 기준에서도 1위예요." : `기본 기준이었다면 <b>${esc(scored.find(s => s.profile.id === baseWinner).profile.name)}</b>님이 1위예요. 기준을 바꿔서 1위가 달라졌어요.`}</div>` : ""}
       <h3>왜 1위인가요?</h3>
       <ul>${why.good.map(x => `<li class="good">${esc(x)}</li>`).join("")}</ul>
       ${why.warn.length ? `<h3>참고할 차이점</h3><ul>${why.warn.map(x => `<li class="warn">${esc(x)}</li>`).join("")}</ul>` : ""}
@@ -402,15 +490,15 @@ function runMatch(me) {
     <div class="card">
       <h2>전체 점수표 (${scored.length}명)</h2>
       <table>
-        <tr><th>순위</th><th>이름</th><th>관심사<br>/${POINTS.interest}</th><th>가치관<br>/${POINTS.values}</th><th>생활<br>/${POINTS.life}</th><th>총점</th></tr>
+        <tr><th>순위</th><th>이름</th><th>관심사<br>/${POINTS.interest}</th><th>가치관<br>/${POINTS.values}</th><th>생활<br>/${POINTS.life}</th><th>총점</th>${changed ? "<th>기본<br>대비</th>" : ""}</tr>
         ${scored.map((s, i) => `<tr class="${i === 0 ? "first" : ""}"><td>${i + 1}</td>
           <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.region)}</span>${s.profile.source === "friend" ? ' <span class="tag friend">등록</span>' : ""}</td>
-          <td>${s.pts.interest}</td><td>${s.pts.values}</td><td>${s.pts.life}</td><td><b>${s.total}</b></td></tr>`).join("")}
+          <td>${s.pts.interest}</td><td>${s.pts.values}</td><td>${s.pts.life}</td><td><b>${s.total}</b></td>${changed ? `<td>${rankDelta(s, i)}</td>` : ""}</tr>`).join("")}
       </table>
     </div>
     ${filteredCard(filtered)}
     ${$("#howto").outerHTML}`;
-  out.scrollIntoView({ behavior: "smooth" });
+  if (scroll) $("#weightCard").scrollIntoView({ behavior: "smooth" });
 }
 
 function filteredCard(filtered) {
