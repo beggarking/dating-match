@@ -48,7 +48,7 @@
     <div class="card">
       <div class="tabs">
         <button id="tabMe" class="on">① 내 정보</button>
-        <button id="tabFriend">② 친구 추가</button>
+        <button id="tabFriend">② 정보 등록</button>
       </div>
       <form id="form" onsubmit="return false">
         <div class="row">
@@ -74,14 +74,14 @@
           <button class="primary" type="button" id="matchBtn" style="flex:1.4">추천 받기</button>
         </div>
         <div class="row" style="margin-top:14px; display:none" id="friendButtons">
-          <button class="primary" type="button" id="addBtn">저장소에 친구 추가</button>
+          <button class="primary" type="button" id="addBtn">저장소에 정보 등록</button>
         </div>
       </form>
     </div>
     <div class="card">
       <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
       <div class="meta" id="friendList"></div>
-      <div class="meta" style="margin-top:6px">친구와 내 정보는 이 브라우저에만 저장됩니다.</div>
+      <div class="meta" style="margin-top:6px">등록한 정보와 즐겨찾기는 이 브라우저에만 저장됩니다.</div>
     </div>
   </section>
 
@@ -128,7 +128,7 @@ const DRINK = { "안 마심": 0, "가끔": 1, "자주": 2 };
 const POINTS = { interest: 40, values: 40, life: 20 };
 
 // ═══════════════════════════════════════════════════════════════════
-// 2. 프로필 저장소: 가상 프로필 20명 (+ 브라우저에 저장된 친구들)
+// 2. 프로필 저장소: 가상 프로필 20명 (+ 브라우저에 등록한 정보)
 //    a = 가치관 답 [연애 속도, 연락 빈도, 주말, 성격, 만남 목적]
 // ═══════════════════════════════════════════════════════════════════
 const P = (name, gender, age, region, smoking, drinking, interests, a, pg, pmin, pmax, intro) => ({
@@ -300,7 +300,7 @@ function fillForm(p) {
   f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max;
 }
 
-let meDraft = null; // 저장하지 않고 입력 중인 내 정보 (친구 탭에 다녀와도 유지)
+let meDraft = null; // 저장하지 않고 입력 중인 내 정보 (정보 등록 탭에 다녀와도 유지)
 
 function switchTab(m) {
   if (mode === "me" && m !== "me") meDraft = readForm();
@@ -323,10 +323,10 @@ function validate(p) {
 
 function renderPool() {
   const fs = friends();
-  $("#poolCount").textContent = `${VIRTUAL.length + fs.length}명 (가상 ${VIRTUAL.length} · 친구 ${fs.length})`;
+  $("#poolCount").textContent = `${VIRTUAL.length + fs.length}명 (가상 ${VIRTUAL.length} · 등록 ${fs.length})`;
   $("#friendList").innerHTML = fs.length
-    ? "친구: " + fs.map(p => `${esc(p.name)} <a href="#" data-del="${esc(p.id)}">삭제</a>`).join(" · ")
-    : "아직 추가한 친구가 없어요.";
+    ? "등록된 정보: " + fs.map(p => `${esc(p.name)} <a href="#" data-del="${esc(p.id)}">삭제</a>`).join(" · ")
+    : "아직 등록한 정보가 없어요.";
 }
 
 /** 즐겨찾기: 자주 쓰는 내 정보를 저장해두는 용도 (추천에는 필요 없음) */
@@ -388,7 +388,7 @@ function runMatch(me) {
   const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${(v / max) * 100}%"></i></span><span>${v} / ${max}</span></div>`;
   out.innerHTML = `
     <div class="card winner">
-      <h2>🏆 1위 추천: ${esc(w.profile.name)} <span class="tag ${w.profile.source === "friend" ? "friend" : ""}">${w.profile.source === "friend" ? "친구" : "가상"}</span></h2>
+      <h2>🏆 1위 추천: ${esc(w.profile.name)} <span class="tag ${w.profile.source === "friend" ? "friend" : ""}">${w.profile.source === "friend" ? "등록" : "가상"}</span></h2>
       <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
       ${w.profile.intro ? `<div class="meta">“${esc(w.profile.intro)}”</div>` : ""}
       <div style="display:flex; gap:20px; align-items:center; margin-top:10px">
@@ -404,7 +404,7 @@ function runMatch(me) {
       <table>
         <tr><th>순위</th><th>이름</th><th>관심사<br>/${POINTS.interest}</th><th>가치관<br>/${POINTS.values}</th><th>생활<br>/${POINTS.life}</th><th>총점</th></tr>
         ${scored.map((s, i) => `<tr class="${i === 0 ? "first" : ""}"><td>${i + 1}</td>
-          <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.region)}</span>${s.profile.source === "friend" ? ' <span class="tag friend">친구</span>' : ""}</td>
+          <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.region)}</span>${s.profile.source === "friend" ? ' <span class="tag friend">등록</span>' : ""}</td>
           <td>${s.pts.interest}</td><td>${s.pts.values}</td><td>${s.pts.life}</td><td><b>${s.total}</b></td></tr>`).join("")}
       </table>
     </div>
@@ -424,7 +424,7 @@ function addFriend() {
   store.set("friends", [...friends(), { ...p, id: "f-" + Date.now().toString(36), source: "friend" }]);
   switchTab("friend");
   renderPool();
-  alert(`${p.name}님을 저장소에 추가했어요.`);
+  alert(`${p.name}님의 정보를 저장소에 등록했어요.`);
 }
 
 $("#tabMe").onclick = () => switchTab("me");
