@@ -162,6 +162,8 @@
   .post [data-post] { cursor:pointer; }
   .post [data-post]:hover { background:#FFFBEA; } .post [data-post]:hover::before { background:#FFFBEA; }
   .postHead { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .nameBtn { padding:0; border:0; background:none; color:inherit; font:inherit; cursor:pointer; text-align:left; }
+  .nameBtn:hover { text-decoration:underline; }
   .postHead .name { padding:0; border:0; background:none; color:var(--ink); font-weight:900; font-size:15px; }
   .pbody { margin:6px 0; font-size:15px; font-weight:500; white-space:pre-wrap; word-break:break-word; }
   .post .pbody.clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
@@ -1086,11 +1088,12 @@ function runMatch(me, { scroll = true } = {}) {
     <div class="card winner">
       <div class="winner-head">
         <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap">
-        ${avatarHTML(w.profile, 92)}
+        <button class="whoBtn" type="button" ${userAttrs(w.profile)} aria-label="${esc(w.profile.name)}님 프로필 보기">${avatarHTML(w.profile, 92)}</button>
         <div>
           <span class="badge">1위 추천!</span>
-          <h2>${esc(w.profile.name)} ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
+          <h2><button class="nameBtn" type="button" ${userAttrs(w.profile)}>${esc(w.profile.name)}</button> ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
           <div style="font-weight:500">${esc(w.profile.dept)} · ${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
+          <button class="ghost" type="button" ${userAttrs(w.profile)} style="margin-top:10px">프로필 보기 · 대화 요청</button>
         </div>
         </div>
         <div class="sticker">${w.total}<small>점 / 100</small></div>
