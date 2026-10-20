@@ -3,65 +3,86 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>교통대 Match Lab</title>
+<title>교만추</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#f6f5f2; --card:#fff; --ink:#222; --sub:#777; --line:#e4e2dd; --accent:#e0526b; --good:#2e8b57; --warn:#c77700; --blue:#4a7bd0; }
+  /* 팝 디자인: 굵은 검정 테두리 + 딱 떨어지는 그림자 + 노랑/핑크 포인트 */
+  :root { --bg:#FFF6D6; --card:#fff; --ink:#111; --sub:#555; --line:#111; --soft:#eee; --accent:#FF6FA3; --yellow:#FFD23F; --blue:#3D7BFF; --good:#1F7A4D; --warn:#A35300; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; font-size:14px; }
-  header { padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-  header h1 { margin:0; font-size:20px; } header .sub { color:var(--sub); flex:1; }
-  #userBox { display:flex; align-items:center; gap:8px; font-size:13px; }
-  nav.tabs { display:flex; gap:6px; max-width:1200px; margin:16px auto 0; padding:0 24px; }
-  nav.tabs button { flex:none; background:#e8e6e1; color:var(--ink); padding:9px 16px; }
-  nav.tabs button.on { background:var(--accent); color:#fff; }
-  main { display:grid; grid-template-columns:380px 1fr; gap:20px; padding:16px 24px 24px; max-width:1200px; margin:auto; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif; font-size:14px; }
+  .display, header h1, h2, .authTabs button, button.primary, .sticker, .badge { font-family:"Black Han Sans","Noto Sans KR",sans-serif; font-weight:400; }
+  header { padding:14px 24px; border-bottom:3px solid var(--ink); background:var(--card); display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:26px; display:flex; align-items:center; gap:10px; }
+  header .sub { color:var(--sub); flex:1; font-weight:500; }
+  .logo { display:inline-flex; width:38px; height:38px; align-items:center; justify-content:center; background:var(--accent); border:3px solid var(--ink); border-radius:10px; }
+  #userBox { display:flex; align-items:center; gap:10px; font-weight:700; }
+  nav.tabs { display:flex; flex-wrap:wrap; gap:8px; max-width:1200px; margin:20px auto 0; padding:0 24px; }
+  nav.tabs button { background:transparent; color:var(--ink); border-color:transparent; box-shadow:none; padding:10px 16px; }
+  nav.tabs button.on { background:var(--yellow); border-color:var(--ink); box-shadow:3px 3px 0 var(--ink); font-weight:900; }
+  main { display:grid; grid-template-columns:380px 1fr; gap:24px; padding:20px 24px 32px; max-width:1200px; margin:auto; }
   main.single { grid-template-columns:minmax(0, 640px); justify-content:center; }
   @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } nav.tabs { padding:0 16px; } header { padding:12px 16px; } }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
-  h2 { font-size:15px; margin:0 0 12px; } h3 { font-size:13px; margin:14px 0 6px; color:var(--sub); }
-  label { display:block; font-size:12px; color:var(--sub); margin:8px 0 3px; }
-  input, select { width:100%; padding:7px 8px; border:1px solid var(--line); border-radius:6px; font:inherit; }
-  .row { display:flex; gap:8px; } .row > * { flex:1; min-width:0; }
-  .chips { display:flex; flex-wrap:wrap; gap:4px; }
-  .chips label { margin:0; display:inline-flex; align-items:center; gap:3px; padding:3px 8px; border:1px solid var(--line); border-radius:12px; color:var(--ink); cursor:pointer; }
-  .chips input { width:auto; margin:0; }
-  .chips label:has(input:checked) { background:#ffe6ea; border-color:var(--accent); }
-  .q { display:grid; grid-template-columns:70px 1fr; align-items:center; gap:6px; margin:4px 0; font-size:12px; }
-  button { padding:8px 12px; border:0; border-radius:6px; background:var(--ink); color:#fff; font:inherit; cursor:pointer; }
+  .card { background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:6px 6px 0 var(--ink); padding:20px; margin-bottom:24px; }
+  h2 { font-size:21px; margin:0 0 12px; } h3 { font-size:15px; margin:18px 0 8px; font-weight:900; }
+  label { display:block; font-size:13px; font-weight:700; margin:10px 0 4px; }
+  input, select { width:100%; padding:9px 10px; border:2px solid var(--ink); border-radius:10px; font:inherit; background:#fff; color:var(--ink); }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; min-width:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chips label { margin:0; display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border:2px solid var(--ink); border-radius:999px; font-weight:500; background:#fff; cursor:pointer; }
+  .chips input { width:auto; margin:0; accent-color:var(--ink); }
+  .chips label:has(input:checked) { background:var(--accent); font-weight:700; }
+  .q { display:grid; grid-template-columns:76px 1fr; align-items:center; gap:8px; margin:6px 0; font-size:13px; font-weight:700; }
+  button { padding:9px 14px; border:3px solid var(--ink); border-radius:12px; background:var(--ink); color:#fff; font:inherit; font-weight:700; cursor:pointer; }
+  button:active:not(:disabled) { transform:translate(2px, 2px); }
   button:disabled { opacity:.5; cursor:default; }
-  button.ghost { background:none; color:var(--ink); border:1px solid var(--line); }
-  button.primary { background:var(--accent); }
-  button.link { background:none; color:var(--sub); padding:0; text-decoration:underline; }
-  .authTabs { display:flex; gap:6px; margin-bottom:8px; } .authTabs button { flex:1; background:#e8e6e1; color:var(--ink); } .authTabs button.on { background:var(--accent); color:#fff; }
-  .msg { font-size:13px; margin-top:10px; min-height:18px; } .msg.err { color:#c0392b; } .msg.ok { color:var(--good); }
+  button.ghost { background:#fff; color:var(--ink); }
+  button.primary { background:var(--accent); color:var(--ink); box-shadow:4px 4px 0 var(--ink); font-size:18px; }
+  button.link { background:none; border:0; color:var(--sub); padding:0; text-decoration:underline; font-weight:500; }
+  .authTabs { display:flex; gap:10px; margin-bottom:8px; }
+  .authTabs button { flex:1; background:#fff; color:var(--ink); font-size:18px; }
+  .authTabs button.on { background:var(--yellow); box-shadow:3px 3px 0 var(--ink); }
+  .msg { font-size:13px; font-weight:700; margin-top:10px; min-height:18px; } .msg.err { color:#B3121B; } .msg.ok { color:var(--good); }
   table { width:100%; border-collapse:collapse; font-size:13px; }
-  th, td { padding:6px 4px; border-bottom:1px solid var(--line); text-align:center; } th { color:var(--sub); font-weight:normal; }
-  td:nth-child(2) { text-align:left; } tr.first td { background:#fff4f6; font-weight:600; }
-  .winner .total { font-size:32px; color:var(--accent); font-weight:700; }
-  .bars div { display:grid; grid-template-columns:80px 1fr 60px; gap:8px; align-items:center; font-size:12px; margin:4px 0; }
-  .slider { display:grid; grid-template-columns:70px 1fr 56px; gap:10px; align-items:center; margin:6px 0; font-size:13px; }
-  .slider input { padding:0; accent-color:var(--accent); } .slider output { text-align:right; font-weight:600; }
-  .winner-top { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-top:10px; }
-  .winner-top svg { flex:none; } .winner-top .scorebox { flex:1; min-width:240px; }
-  .radar-legend { font-size:12px; color:var(--sub); text-align:center; }
-  .radar-legend b { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 10px; vertical-align:-1px; }
-  .up { color:var(--good); font-weight:600; } .down { color:var(--warn); font-weight:600; }
-  .note { background:#fff4f6; border-radius:6px; padding:8px 10px; font-size:13px; margin-top:10px; }
-  .bar { height:8px; background:#eee; border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
+  th, td { padding:8px 4px; border-bottom:2px solid var(--soft); text-align:center; } th { font-weight:900; border-bottom:3px solid var(--ink); }
+  td:nth-child(2) { text-align:left; } tr.first td { background:var(--yellow); font-weight:900; }
+  .winner-head { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px; }
+  .badge { display:inline-block; font-size:17px; padding:5px 14px; background:var(--accent); border:3px solid var(--ink); border-radius:999px; }
+  .winner h2 { font-size:46px; line-height:1; margin:12px 0 6px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  .sticker { background:var(--yellow); border:3px solid var(--ink); border-radius:18px; padding:10px 18px; text-align:center; transform:rotate(-3deg); font-size:46px; line-height:1; }
+  .sticker small { display:block; font-family:"Noto Sans KR",sans-serif; font-size:13px; font-weight:900; margin-top:4px; }
+  .bars div { display:grid; grid-template-columns:76px 1fr 76px; gap:10px; align-items:center; font-weight:700; margin:8px 0; }
+  .bar { height:18px; background:#fff; border:3px solid var(--ink); border-radius:999px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
+  .slider { display:grid; grid-template-columns:76px 1fr 60px; gap:10px; align-items:center; margin:8px 0; font-weight:700; }
+  .slider input { padding:0; border:0; accent-color:var(--ink); } .slider output { text-align:right; font-weight:900; }
+  .winner-top { display:flex; flex-wrap:wrap; gap:24px; align-items:center; margin-top:18px; }
+  .radar-box { background:var(--bg); border:3px solid var(--ink); border-radius:18px; padding:8px; }
+  .winner-top .scorebox { flex:1; min-width:240px; }
+  .radar-legend { font-size:13px; font-weight:700; text-align:center; }
+  .radar-legend b { display:inline-block; width:14px; height:14px; border:2px solid var(--ink); margin:0 5px 0 12px; vertical-align:-2px; }
+  .up { color:var(--good); font-weight:900; } .down { color:var(--warn); font-weight:900; }
+  .note { background:#FFF0B3; border:2px solid var(--ink); border-radius:12px; padding:10px 12px; font-size:13px; font-weight:500; margin-top:14px; }
   ul { margin:4px 0; padding-left:18px; } li { margin:3px 0; }
   li.good::marker { content:"✓ "; color:var(--good); } li.warn::marker { content:"! "; color:var(--warn); }
-  .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:32px 0; }
-  .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); white-space:nowrap; }
-  .tag.member { background:#e6efff; color:var(--blue); } .tag.friend { background:#ffe6ea; color:var(--accent); }
-  dl.summary { display:grid; grid-template-columns:70px 1fr; gap:4px 8px; margin:8px 0 12px; font-size:13px; }
-  dl.summary dt { color:var(--sub); } dl.summary dd { margin:0; }
-  details.danger summary { cursor:pointer; color:var(--sub); font-size:12px; }
+  ul.reasons { list-style:none; padding:0; margin:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px; }
+  ul.reasons li { display:block; margin:0; border:2px solid var(--ink); border-radius:12px; padding:10px 12px; background:var(--bg); font-weight:500; }
+  ul.reasons li.good::before { content:"✓ "; color:var(--good); font-weight:900; }
+  ul.reasons li.warn::before { content:"! "; color:var(--warn); font-weight:900; }
+  ul.reasons li.warn { background:#fff; border-style:dashed; }
+  .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:32px 0; font-weight:700; }
+  .tag { font-size:11px; font-weight:700; padding:2px 8px; border:2px solid var(--ink); border-radius:999px; background:#fff; color:var(--ink); white-space:nowrap; vertical-align:middle; font-family:"Noto Sans KR",sans-serif; }
+  .tag.member { background:#CFE0FF; } .tag.friend { background:#FFD0E1; }
+  dl.summary { display:grid; grid-template-columns:76px 1fr; gap:6px 8px; margin:8px 0 14px; font-size:13px; }
+  dl.summary dt { color:var(--sub); font-weight:700; } dl.summary dd { margin:0; font-weight:500; }
+  details.danger summary { cursor:pointer; color:var(--sub); font-size:13px; font-weight:700; }
   [hidden] { display:none !important; }
 </style>
 </head>
 <body>
 <header>
-  <h1>💘 교통대 Match Lab</h1>
+  <h1><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span><span id="appName">교만추</span></h1>
   <span class="sub">누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여주는 소개팅 추천</span>
   <div id="userBox" hidden><span id="userLabel"></span><button class="ghost" type="button" id="logoutBtn">로그아웃</button></div>
 </header>
@@ -75,12 +96,12 @@
         <button type="button" data-auth="signup">회원가입</button>
       </div>
       <form id="loginForm" onsubmit="return false">
-        <label>학번</label><input name="sid" inputmode="numeric" autocomplete="username" required>
+        <label>학번</label><input name="sid" inputmode="numeric" pattern="[0-9]{7}" maxlength="7" autocomplete="username" required>
         <label>비밀번호</label><input name="pw" type="password" autocomplete="current-password" required>
         <button class="primary" type="submit" style="width:100%; margin-top:14px">로그인</button>
       </form>
       <form id="signupForm" onsubmit="return false" hidden>
-        <label>학번 (숫자 7~10자리)</label><input name="sid" inputmode="numeric" pattern="[0-9]{7,10}" autocomplete="username" required>
+        <label>학번 (7자리)</label><input name="sid" inputmode="numeric" pattern="[0-9]{7}" maxlength="7" autocomplete="username" required>
         <label>이름</label><input name="name" maxlength="20" required>
         <label>비밀번호 (6자 이상)</label><input name="pw" type="password" minlength="6" autocomplete="new-password" required>
         <label>비밀번호 확인</label><input name="pw2" type="password" minlength="6" autocomplete="new-password" required>
@@ -227,26 +248,26 @@ const P = (name, gender, age, region, dept, smoking, drinking, interests, a, pg,
   prefer: { gender: pg, age_min: pmin, age_max: pmax },
 });
 const VIRTUAL = [
-  P("서윤", "여", 26, "서울", "영어영문학과", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "주말엔 카페에서 책 읽는 시간이 제일 행복해요"),
-  P("하린", "여", 27, "서울", "경영학과", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "페스티벌과 파티를 사랑하는 에너자이저"),
-  P("지우", "여", 25, "경기", "스포츠산업학과", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 산이나 캠핑장에 있어요"),
-  P("민서", "여", 29, "서울", "경영학과", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "스타트업 PM, 계획 세우는 걸 좋아해요"),
-  P("예린", "여", 24, "부산", "산업디자인학과", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "고양이 두 마리와 사는 일러스트레이터"),
-  P("수아", "여", 28, "서울", "컴퓨터공학과", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 개발자, 밤에 활동하는 올빼미형"),
-  P("채원", "여", 31, "서울", "유아교육학과", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "초등학교 선생님, 주말엔 봉사활동"),
-  P("다은", "여", 26, "서울", "한국어문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "출판사 편집자, 혼자 영화관 가는 것도 좋아해요"),
-  P("소연", "여", 27, "서울", "간호학과", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "간호사, 쉬는 날엔 영화 리뷰를 써요"),
-  P("가은", "여", 30, "인천", "경영학과", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "마케팅 회사 대표, 일 욕심이 많아요"),
-  P("도윤", "남", 28, "서울", "경영학과", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "회계사, 주말엔 헬스와 맛집 탐방"),
-  P("시우", "남", 27, "경기", "음악학과", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드에서 기타 쳐요"),
-  P("준호", "남", 29, "서울", "영어영문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "번역가, 고전 영화를 즐겨 봐요"),
-  P("태민", "남", 26, "경기", "스포츠산업학과", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "체육 트레이너, 서핑과 클라이밍"),
-  P("현우", "남", 31, "서울", "컴퓨터공학과", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "IT 팀장, 결혼을 생각하고 만나고 싶어요"),
-  P("민재", "남", 27, "서울", "미디어디자인학과", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "카피라이터, 노는 게 제일 좋아"),
-  P("승현", "남", 25, "부산", "식품공학과", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "수의테크니션, 강아지랑 살아요"),
-  P("재원", "남", 28, "서울", "소프트웨어학과", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "백엔드 개발자, SF 소설 좋아해요"),
-  P("지환", "남", 33, "서울", "사회복지학과", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "고등학교 국어 선생님"),
-  P("우진", "남", 30, "대구", "자동차공학과", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "정비소 사장, 캠핑장에서 불멍"),
+  P("서윤", "여", 26, "서울", "영어영문학과", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "공강엔 도서관 옆 카페에서 책 읽어요"),
+  P("하린", "여", 27, "서울", "경영학과", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "축제랑 과 행사는 빠짐없이 가는 인싸예요"),
+  P("지우", "여", 25, "경기", "스포츠산업학과", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 동아리 사람들이랑 산이나 캠핑장에 가요"),
+  P("민서", "여", 29, "서울", "경영학과", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "학회 활동하면서 아침마다 러닝해요, 계획 세우는 게 취미"),
+  P("예린", "여", 24, "부산", "산업디자인학과", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "과제 없는 날엔 일러스트 그려요, 고양이 집사예요"),
+  P("수아", "여", 28, "서울", "컴퓨터공학과", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 동아리 회장, 밤새 코딩하는 올빼미형"),
+  P("채원", "여", 31, "서울", "유아교육학과", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "교육봉사 동아리에서 아이들 가르치는 게 행복해요"),
+  P("다은", "여", 26, "서울", "한국어문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "학보사 기자예요, 혼자 영화관 가는 것도 좋아해요"),
+  P("소연", "여", 27, "서울", "간호학과", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "실습 끝나면 영화 보면서 리뷰 쓰는 게 낙이에요"),
+  P("가은", "여", 30, "인천", "경영학과", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "창업 동아리에서 공모전 준비 중이에요"),
+  P("도윤", "남", 28, "서울", "경영학과", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "학교 헬스장 단골, 학교 앞 맛집은 다 알아요"),
+  P("시우", "남", 27, "경기", "음악학과", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드 동아리에서 기타 쳐요"),
+  P("준호", "남", 29, "서울", "영어영문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "영화 동아리에서 고전 영화 상영회를 열어요"),
+  P("태민", "남", 26, "경기", "스포츠산업학과", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "방학마다 서핑하러 바다 가요, 클라이밍도 해요"),
+  P("현우", "남", 31, "서울", "컴퓨터공학과", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "졸업반이라 취업 준비 중, 진지한 만남을 원해요"),
+  P("민재", "남", 27, "서울", "미디어디자인학과", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "축제 기획단이에요, 노는 게 제일 좋아"),
+  P("승현", "남", 25, "부산", "식품공학과", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "동물보호 동아리에서 봉사해요, 강아지랑 살아요"),
+  P("재원", "남", 28, "서울", "소프트웨어학과", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "알고리즘 스터디 하면서 SF 소설 읽어요"),
+  P("지환", "남", 33, "서울", "사회복지학과", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "학생회 복지국장을 맡고 있어요"),
+  P("우진", "남", 30, "대구", "자동차공학과", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "자동차 동아리에서 정비 배우고, 캠핑장에서 불멍해요"),
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -350,7 +371,7 @@ function explainWinner(me, w, second) {
 const ERRORS = {
   already_registered: "이미 가입된 학번이에요. 로그인해 주세요.",
   invalid_login: "학번 또는 비밀번호가 맞지 않아요.",
-  bad_student_id: "학번은 숫자 7~10자리로 입력해 주세요.",
+  bad_student_id: "학번은 숫자 7자리로 입력해 주세요.",
   short_password: "비밀번호는 6자 이상이어야 해요.",
   bad_name: "이름은 1~20자로 입력해 주세요.",
   bad_profile: "프로필 정보가 올바르지 않아요.",
@@ -693,18 +714,18 @@ function radarSVG(mine, theirs, theirName) {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / AXES.length;
     return [c + Math.cos(a) * R * r, c + Math.sin(a) * R * r];
   };
-  const poly = (v, color) => `<polygon points="${shape(v).map((r, i) => pt(i, r).join(",")).join(" ")}"
-    fill="${color}" fill-opacity="0.22" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+  const poly = (v, color, opacity) => `<polygon points="${shape(v).map((r, i) => pt(i, r).join(",")).join(" ")}"
+    fill="${color}" fill-opacity="${opacity}" stroke="#111" stroke-width="2.5" stroke-linejoin="round"/>`;
   const rings = [0.25, 0.5, 0.75, 1].map(r =>
-    `<polygon points="${AXES.map((_, i) => pt(i, r).join(",")).join(" ")}" fill="none" stroke="#e4e2dd"/>`).join("");
-  const spokes = AXES.map((_, i) => `<line x1="${c}" y1="${c}" x2="${pt(i, 1)[0]}" y2="${pt(i, 1)[1]}" stroke="#e4e2dd"/>`).join("");
+    `<polygon points="${AXES.map((_, i) => pt(i, r).join(",")).join(" ")}" fill="${r === 1 ? "#fff" : "none"}" stroke="#111" stroke-width="${r === 1 ? 2 : 1}"${r === 1 ? "" : " stroke-dasharray=\"4 4\""}/>`).join("");
+  const spokes = AXES.map((_, i) => `<line x1="${c}" y1="${c}" x2="${pt(i, 1)[0]}" y2="${pt(i, 1)[1]}" stroke="#111" stroke-opacity="0.25"/>`).join("");
   const labels = AXES.map((ax, i) => {
     const [x, y] = pt(i, 1.28);
-    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="#555">${ax}</text>`;
+    return `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" fill="#111">${ax}</text>`;
   }).join("");
-  return `<div><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="취향 레이더 차트">
-    ${rings}${spokes}${poly(mine, "#4a7bd0")}${poly(theirs, "#e0526b")}${labels}</svg>
-    <div class="radar-legend"><b style="background:#4a7bd0"></b>나<b style="background:#e0526b"></b>${esc(theirName)}</div></div>`;
+  return `<div class="radar-box"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="취향 레이더 차트">
+    ${rings}${spokes}${poly(mine, "#3D7BFF", 0.35)}${poly(theirs, "#FF6FA3", 0.6)}${labels}</svg>
+    <div class="radar-legend"><b style="background:#3D7BFF"></b>나<b style="background:#FF6FA3"></b>${esc(theirName)}</div></div>`;
 }
 
 // ── 내 기준 조정 슬라이더 ──
@@ -765,13 +786,18 @@ function runMatch(me, { scroll = true } = {}) {
   const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${max ? (v / max) * 100 : 0}%"></i></span><span>${v} / ${max}</span></div>`;
   out.innerHTML = `
     <div class="card winner">
-      <h2>🏆 1위 추천: ${esc(w.profile.name)} ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
-      <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.dept)} · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
-      ${w.profile.intro ? `<div class="meta">“${esc(w.profile.intro)}”</div>` : ""}
+      <div class="winner-head">
+        <div>
+          <span class="badge">1위 추천!</span>
+          <h2>${esc(w.profile.name)} ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
+          <div style="font-weight:500">${esc(w.profile.dept)} · ${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
+        </div>
+        <div class="sticker">${w.total}<small>점 / 100</small></div>
+      </div>
+      ${w.profile.intro ? `<div style="margin-top:12px; font-weight:500">“${esc(w.profile.intro)}”</div>` : ""}
       <div class="winner-top">
         ${radarSVG(w.detail.mv, w.detail.ov, w.profile.name)}
         <div class="scorebox">
-          <div class="total">${w.total}<span class="meta"> / 100</span></div>
           <div class="bars">${bar("관심사", w.pts.interest, POINTS.interest)}${bar("가치관", w.pts.values, POINTS.values)}${bar("생활 조건", w.pts.life, POINTS.life)}</div>
           <div class="meta" style="margin-top:6px">레이더: 관심사를 6가지 성향으로 임베딩한 모양이에요. 두 모양이 많이 겹칠수록 관심사 점수가 높아요 (유사도 ${Math.round(w.detail.interestSim * 100)}%).</div>
         </div>
@@ -779,8 +805,8 @@ function runMatch(me, { scroll = true } = {}) {
       ${changed ? `<div class="note">현재 기준: 관심사 ${POINTS.interest} · 가치관 ${POINTS.values} · 생활 조건 ${POINTS.life}점 —
         ${baseWinner === w.profile.id ? "기본 기준에서도 1위예요." : `기본 기준이었다면 <b>${esc(scored.find(s => s.profile.id === baseWinner).profile.name)}</b>님이 1위예요. 기준을 바꿔서 1위가 달라졌어요.`}</div>` : ""}
       <h3>왜 1위인가요?</h3>
-      <ul>${why.good.map(x => `<li class="good">${esc(x)}</li>`).join("")}</ul>
-      ${why.warn.length ? `<h3>참고할 차이점</h3><ul>${why.warn.map(x => `<li class="warn">${esc(x)}</li>`).join("")}</ul>` : ""}
+      <ul class="reasons">${why.good.map(x => `<li class="good">${esc(x)}</li>`).join("")}</ul>
+      ${why.warn.length ? `<h3>참고할 차이점</h3><ul class="reasons">${why.warn.map(x => `<li class="warn">${esc(x)}</li>`).join("")}</ul>` : ""}
     </div>
     <div class="card">
       <h2>전체 점수표 (${scored.length}명)</h2>

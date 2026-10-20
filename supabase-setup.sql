@@ -12,13 +12,17 @@ create extension if not exists pgcrypto with schema extensions;
 -- 1) 회원: 가입할 때는 학번 · 이름 · 비밀번호만, 나머지는 "내 정보 수정"에서 profile 에 채운다
 create table if not exists public.ml_users (
   id            uuid primary key default gen_random_uuid(),
-  student_id    text not null unique check (student_id ~ '^[0-9]{7,10}$'),
+  student_id    text not null unique check (student_id ~ '^[0-9]{7}$'),
   name          text not null check (char_length(name) between 1 and 20),
   password_hash text not null,
   profile       jsonb,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- 학번은 7자리 (이미 만든 테이블도 규칙을 갱신)
+alter table public.ml_users drop constraint if exists ml_users_student_id_check;
+alter table public.ml_users add constraint ml_users_student_id_check check (student_id ~ '^[0-9]{7}$');
 
 -- 2) 로그인 세션: 로그인하면 토큰을 발급하고, 브라우저는 이 토큰으로 함수를 호출한다
 create table if not exists public.ml_sessions (
@@ -56,7 +60,7 @@ declare u ml_users; t uuid;
 begin
   p_student_id := trim(p_student_id);
   p_name := trim(p_name);
-  if p_student_id !~ '^[0-9]{7,10}$' then raise exception 'bad_student_id'; end if;
+  if p_student_id !~ '^[0-9]{7}$' then raise exception 'bad_student_id'; end if;
   if char_length(p_name) not between 1 and 20 then raise exception 'bad_name'; end if;
   if char_length(p_password) < 6 then raise exception 'short_password'; end if;
   if exists (select 1 from ml_users where student_id = p_student_id) then raise exception 'already_registered'; end if;
