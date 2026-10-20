@@ -44,6 +44,8 @@
   .authTabs { display:flex; gap:10px; margin-bottom:8px; }
   .authTabs button { flex:1; background:#fff; color:var(--ink); font-size:18px; }
   .authTabs button.on { background:var(--yellow); box-shadow:3px 3px 0 var(--ink); }
+  .nickRow { display:flex; gap:8px; } .nickRow input { flex:1; min-width:0; } .nickRow button { flex:none; white-space:nowrap; }
+  .nickMsg { font-size:13px; font-weight:700; margin-top:6px; } .nickMsg:empty { display:none; } .nickMsg.err { color:#B3121B; } .nickMsg.ok { color:var(--good); }
   .msg { font-size:13px; font-weight:700; margin-top:10px; min-height:18px; } .msg.err { color:#B3121B; } .msg.ok { color:var(--good); }
   table { width:100%; border-collapse:collapse; font-size:13px; }
   th, td { padding:8px 4px; border-bottom:2px solid var(--soft); text-align:center; } th { font-weight:900; border-bottom:3px solid var(--ink); }
@@ -102,11 +104,14 @@
       </form>
       <form id="signupForm" onsubmit="return false" hidden>
         <label>학번 (7자리)</label><input name="sid" inputmode="numeric" pattern="[0-9]{7}" maxlength="7" autocomplete="username" required>
-        <label>이름</label><input name="name" maxlength="20" required>
+        <label>이름 <span class="meta">(다른 학생에게는 보이지 않아요)</span></label><input name="name" maxlength="20" autocomplete="name" required>
+        <label>닉네임 <span class="meta">(추천 화면에 보이는 이름 · 한글/영문/숫자 2~12자)</span></label>
+        <div class="nickRow"><input name="nick" maxlength="12" autocomplete="nickname" required><button class="ghost" type="button" id="signupNickBtn">중복확인</button></div>
+        <div class="nickMsg" id="signupNickMsg" role="status"></div>
         <label>비밀번호 (6자 이상)</label><input name="pw" type="password" minlength="6" autocomplete="new-password" required>
         <label>비밀번호 확인</label><input name="pw2" type="password" minlength="6" autocomplete="new-password" required>
         <button class="primary" type="submit" style="width:100%; margin-top:14px">가입하기</button>
-        <div class="meta" style="margin-top:8px">가입은 학번 · 이름 · 비밀번호만으로 끝나요. 학과 · 관심사 같은 정보는 가입 후 <b>내 정보 수정</b>에서 입력해요.</div>
+        <div class="meta" style="margin-top:8px">가입은 학번 · 이름 · 닉네임 · 비밀번호만으로 끝나요. 학과 · 관심사 같은 정보는 가입 후 <b>내 정보 수정</b>에서 입력해요.</div>
       </form>
       <div class="msg" id="authMsg"></div>
     </div>
@@ -374,6 +379,8 @@ const ERRORS = {
   bad_student_id: "학번은 숫자 7자리로 입력해 주세요.",
   short_password: "비밀번호는 6자 이상이어야 해요.",
   bad_name: "이름은 1~20자로 입력해 주세요.",
+  bad_nickname: "닉네임은 한글 · 영문 · 숫자 · _ 2~12자로 입력해 주세요.",
+  nickname_taken: "이미 사용 중인 닉네임이에요.",
   bad_profile: "프로필 정보가 올바르지 않아요.",
   not_logged_in: "로그인이 만료됐어요. 다시 로그인해 주세요.",
 };
@@ -427,13 +434,13 @@ function cleanProfile(p, extra) {
   };
 }
 
-const myProfile = () => (session?.user.profile ? cleanProfile(session.user.profile, { id: session.user.id, name: session.user.name }) : null);
+const myProfile = () => (session?.user.profile ? cleanProfile(session.user.profile, { id: session.user.id, name: session.user.nickname }) : null);
 const registered = () => store.get("friends", []);
 const pool = () => [...VIRTUAL, ...members, ...registered()];
 
 async function loadMembers() {
   const list = await rpc("ml_list_profiles", { p_token: session.token });
-  members = list.map(m => cleanProfile(m.profile, { id: m.id, name: m.name, source: "member" })).filter(m => m.interests.length);
+  members = list.map(m => cleanProfile(m.profile, { id: m.id, name: m.nickname, source: "member" })).filter(m => m.interests.length);
   renderPoolCount();
 }
 
@@ -488,14 +495,53 @@ $("#loginForm").onsubmit = e => {
 $("#signupForm").onsubmit = e => {
   e.preventDefault();
   const f = e.target.elements;
+  if (!signupNick.ensure()) return authMsg("");
   if (f.pw.value !== f.pw2.value) return authMsg("비밀번호 확인이 일치하지 않아요.");
-  withBusy(e.submitter ?? e.target.querySelector("button"), async () => {
+  withBusy(e.submitter ?? e.target.querySelector("button[type=submit]"), async () => {
     try {
-      setSession(await rpc("ml_signup", { p_student_id: f.sid.value.trim(), p_password: f.pw.value, p_name: f.name.value.trim() }));
+      setSession(await rpc("ml_signup", {
+        p_student_id: f.sid.value.trim(), p_password: f.pw.value, p_name: f.name.value.trim(), p_nickname: f.nick.value.trim(),
+      }));
       e.target.reset();
-    } catch (err) { authMsg(err.message); }
+      signupNick.reset();
+    } catch (err) {
+      if (err.message === ERRORS.nickname_taken) signupNick.taken();
+      else authMsg(err.message);
+    }
   });
 };
+
+// ── 닉네임 중복확인: 입력칸 + [중복확인] 버튼 + 결과 문구(중복이면 빨간 글씨) ──
+const NICK_RE = /^[0-9A-Za-z가-힣_]{2,12}$/;
+function nickChecker(input, button, msgEl, current = () => null) {
+  let checked = null; // 중복확인을 통과한 닉네임
+  const show = (text, kind = "") => { msgEl.className = "nickMsg " + kind; msgEl.textContent = text; };
+  const isCurrent = nick => !!current() && nick.toLowerCase() === current().toLowerCase();
+  input.addEventListener("input", () => { checked = null; show(""); });
+  button.onclick = () => withBusy(button, async () => {
+    const nick = input.value.trim();
+    if (!NICK_RE.test(nick)) return show(ERRORS.bad_nickname, "err");
+    if (isCurrent(nick)) { checked = nick; return show("지금 쓰고 있는 닉네임이에요.", "ok"); }
+    try {
+      const r = await rpc("ml_check_nickname", { p_nickname: nick });
+      if (r.available) { checked = nick; show("사용할 수 있는 닉네임이에요.", "ok"); }
+      else show(ERRORS.nickname_taken, "err");
+    } catch (err) { show(err.message, "err"); }
+  });
+  return {
+    /** 가입 · 저장 전에 호출: 중복확인을 안 했으면 빨간 글씨로 안내하고 false */
+    ensure() {
+      const nick = input.value.trim();
+      if (isCurrent(nick) || checked === nick) return true;
+      show(NICK_RE.test(nick) ? "닉네임 중복확인을 해주세요." : ERRORS.bad_nickname, "err");
+      input.focus();
+      return false;
+    },
+    taken() { checked = null; show(ERRORS.nickname_taken, "err"); },
+    reset() { checked = null; show(""); },
+  };
+}
+const signupNick = nickChecker($("#signupForm [name=nick]"), $("#signupNickBtn"), $("#signupNickMsg"));
 
 $("#logoutBtn").onclick = () => logout();
 
@@ -515,7 +561,7 @@ document.querySelectorAll("nav.tabs button").forEach(b => (b.onclick = () => sho
 
 function showApp() {
   $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false;
-  $("#userLabel").textContent = `${session.user.name}님 (${session.user.student_id})`;
+  $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
   $("#out").innerHTML = $("#howto").outerHTML;
   loadMembers().catch(err => console.warn(err));
   if (session.user.profile) showView("match");
@@ -527,10 +573,13 @@ function showApp() {
 }
 
 // ── 프로필 입력 폼 (내 정보 수정 · 정보 등록에서 같이 씀) ──
-function profileFormHTML() {
+function profileFormHTML(withNickCheck) {
+  const nick = withNickCheck
+    ? `<div class="nickRow"><input name="name" maxlength="12" required><button class="ghost nickBtn" type="button">중복확인</button></div><div class="nickMsg" role="status"></div>`
+    : `<input name="name" maxlength="12" required>`;
   return `
     <div class="row">
-      <div><label>이름</label><input name="name" maxlength="20" required></div>
+      <div><label>닉네임</label>${nick}</div>
       <div><label>학과</label><input name="dept" maxlength="30" placeholder="예: 컴퓨터공학과" required></div>
     </div>
     <div class="row">
@@ -553,8 +602,8 @@ function profileFormHTML() {
       <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" min="19" max="99" value="20"><input name="pmax" type="number" min="19" max="99" value="28"></div></div>
     </div>`;
 }
-$("#meForm").innerHTML = profileFormHTML();
-$("#regForm").innerHTML = profileFormHTML();
+$("#meForm").innerHTML = profileFormHTML(true);
+$("#regForm").innerHTML = profileFormHTML(false);
 
 function readForm(form) {
   const f = Object.fromEntries(new FormData(form));
@@ -595,7 +644,7 @@ function renderMySummary() {
   const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
   $("#mySummary").innerHTML = `<h2>내 프로필</h2>
     <dl class="summary">
-      <dt>이름</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)}</span></dd>
+      <dt>닉네임</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)}</span></dd>
       <dt>학과</dt><dd>${esc(me.dept)}</dd>
       ${me.intro ? `<dt>소개</dt><dd>${esc(me.intro)}</dd>` : ""}
       <dt>관심사</dt><dd>${me.interests.map(esc).join(", ")}</dd>
@@ -626,23 +675,25 @@ function fillMeForm() {
   form.reset();
   form.querySelectorAll(".chips input").forEach(x => (x.checked = false));
   const p = session.user.profile;
-  fillForm(form, p ? { ...cleanProfile(p), name: session.user.name } : { name: session.user.name });
-  $("#profileSid").textContent = `학번 ${session.user.student_id}`;
+  fillForm(form, p ? { ...cleanProfile(p), name: session.user.nickname } : { name: session.user.nickname });
+  meNick.reset();
+  $("#profileSid").textContent = `학번 ${session.user.student_id} · 실명 ${session.user.name} (다른 학생에게는 닉네임만 보여요)`;
   $("#profileMsg").textContent = "";
 }
 
 async function saveMyProfile() {
   const form = $("#meForm");
   const p = readForm(form);
-  if (!validate(form, p)) return false;
+  if (!meNick.ensure() || !validate(form, p)) return false;
   const { name, ...profile } = p;
   try {
-    session.user = await rpc("ml_update_profile", { p_token: session.token, p_name: name, p_profile: profile });
-    $("#userLabel").textContent = `${session.user.name}님 (${session.user.student_id})`;
+    session.user = await rpc("ml_update_profile", { p_token: session.token, p_nickname: name, p_profile: profile });
+    $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
     $("#profileNotice").hidden = true;
     $("#profileMsg").className = "msg ok"; $("#profileMsg").textContent = "저장했어요.";
     return true;
   } catch (err) {
+    if (err.message === ERRORS.nickname_taken) meNick.taken();
     $("#profileMsg").className = "msg err"; $("#profileMsg").textContent = err.message;
     return false;
   }
@@ -651,6 +702,7 @@ $("#meSaveBtn").onclick = () => withBusy($("#meSaveBtn"), saveMyProfile);
 $("#meSaveMatchBtn").onclick = () => withBusy($("#meSaveMatchBtn"), async () => {
   if (await saveMyProfile()) { showView("match"); await startMatch(); }
 });
+const meNick = nickChecker($("#meForm [name=name]"), $("#meForm .nickBtn"), $("#meForm .nickMsg"), () => session?.user.nickname);
 $("#meSampleBtn").onclick = () => fillForm($("#meForm"), { ...randomSample(), name: $("#meForm").elements.name.value });
 
 $("#withdrawBtn").onclick = () => withBusy($("#withdrawBtn"), async () => {
