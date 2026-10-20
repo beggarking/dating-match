@@ -15,7 +15,10 @@
   .display, header h1, h2, .authTabs button, button.primary, .sticker, .badge { font-family:"Black Han Sans","Noto Sans KR",sans-serif; font-weight:400; }
   header { padding:14px 24px; border-bottom:3px solid var(--ink); background:var(--card); display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
   header h1 { margin:0; font-size:26px; display:flex; align-items:center; gap:10px; }
-  header .sub { color:var(--sub); flex:1; font-weight:500; }
+  .stats { flex:1; display:flex; flex-wrap:wrap; gap:8px; }
+  .stat { display:inline-flex; align-items:baseline; gap:4px; padding:4px 12px; border:2px solid var(--ink); border-radius:999px; background:var(--yellow); font-weight:700; font-size:13px; white-space:nowrap; }
+  .stat b { font-family:"Black Han Sans",sans-serif; font-weight:400; font-size:20px; line-height:1; }
+  .stat:nth-child(2) { background:#fff; }
   .logo { display:inline-flex; width:38px; height:38px; align-items:center; justify-content:center; background:var(--accent); border:3px solid var(--ink); border-radius:10px; }
   #userBox { display:flex; align-items:center; gap:10px; font-weight:700; }
   nav.tabs { display:flex; flex-wrap:wrap; gap:8px; max-width:1200px; margin:20px auto 0; padding:0 24px; }
@@ -24,7 +27,7 @@
   main { display:grid; grid-template-columns:380px 1fr; gap:24px; padding:20px 24px 32px; max-width:1200px; margin:auto; }
   main.single { grid-template-columns:minmax(0, 640px); justify-content:center; }
   @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } nav.tabs { padding:0 16px; } header { padding:12px 16px; } }
-  @media (max-width:600px){ header .sub { display:none; } header h1 { flex:1; } }
+  @media (max-width:600px){ .stats { order:5; flex-basis:100%; } }
   .card { background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:6px 6px 0 var(--ink); padding:20px; margin-bottom:24px; }
   h2 { font-size:21px; margin:0 0 12px; } h3 { font-size:15px; margin:18px 0 8px; font-weight:900; }
   label { display:block; font-size:13px; font-weight:700; margin:10px 0 4px; }
@@ -77,7 +80,7 @@
   ul.reasons li.warn { background:#fff; border-style:dashed; }
   .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:32px 0; font-weight:700; }
   .tag { font-size:11px; font-weight:700; padding:2px 8px; border:2px solid var(--ink); border-radius:999px; background:#fff; color:var(--ink); white-space:nowrap; vertical-align:middle; font-family:"Noto Sans KR",sans-serif; }
-  .tag.member { background:#CFE0FF; } .tag.friend { background:#FFD0E1; }
+  .tag.member { background:#CFE0FF; } .tag.me { background:#FFD0E1; }
   dl.summary { display:grid; grid-template-columns:76px 1fr; gap:6px 8px; margin:8px 0 14px; font-size:13px; }
   dl.summary dt { color:var(--sub); font-weight:700; } dl.summary dd { margin:0; font-weight:500; }
   details.danger summary { cursor:pointer; color:var(--sub); font-size:13px; font-weight:700; }
@@ -168,6 +171,26 @@
   .comment .pbody { font-size:14px; margin:2px 0 0; }
   dialog.card { padding:0; width:min(440px, calc(100% - 32px)); max-height:calc(100% - 32px); overflow:auto; text-align:center; color:var(--ink); }
   dialog::backdrop { background:rgba(17,17,17,.45); }
+
+  /* 대화 상자 (탭 줄 오른쪽 끝) + 채팅 */
+  nav.tabs #chatBtn { position:relative; margin-left:auto; display:inline-flex; align-items:center; gap:6px; background:var(--accent); border-color:var(--ink); box-shadow:3px 3px 0 var(--ink); font-weight:900; }
+  .countBadge { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 6px; border:2px solid var(--ink); border-radius:999px; background:#E5262D; color:#fff; font-size:12px; font-weight:900; vertical-align:middle; }
+  #chatBtn .countBadge { position:absolute; top:-11px; right:-11px; }
+  dialog.chatDlg { width:min(520px, calc(100% - 32px)); text-align:left; }
+  #chatOut { padding:18px 20px; }
+  .chatTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .chatTop .whoBtn { display:inline-flex; align-items:center; gap:8px; color:var(--ink); font-size:16px; border-radius:999px; }
+  .chatTop .whoBtn .av { box-shadow:none; }
+  .chatRow { display:flex; align-items:center; gap:12px; width:100%; margin:0 0 8px; padding:10px 12px; border-width:2px; border-radius:14px; background:#fff; color:var(--ink); text-align:left; font-weight:500; }
+  .chatRow:hover { background:var(--bg); }
+  .chatRow .cr { flex:1; min-width:0; }
+  .chatRow .last { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--sub); font-size:13px; }
+  .msgs { height:min(52vh, 420px); overflow-y:auto; margin-top:12px; padding:12px; border:3px solid var(--ink); border-radius:16px; background:var(--bg); display:flex; flex-direction:column; gap:8px; }
+  .m { display:flex; align-items:flex-end; gap:6px; max-width:80%; }
+  .m .b { padding:8px 12px; border:2px solid var(--ink); border-radius:4px 14px 14px 14px; background:#fff; font-weight:500; white-space:pre-wrap; word-break:break-word; }
+  .m.mine { align-self:flex-end; flex-direction:row-reverse; }
+  .m.mine .b { border-radius:14px 4px 14px 14px; background:var(--accent); }
+  .m .meta { font-size:11px; white-space:nowrap; }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -175,7 +198,10 @@
 <header>
   <button type="button" id="meAvatar" hidden aria-label="내 프로필" title="내 프로필"></button>
   <h1><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span><span id="appName">교만추</span></h1>
-  <span class="sub">누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여주는 소개팅 추천</span>
+  <div class="stats" id="stats" hidden>
+    <span class="stat" title="내 정보를 입력해서 추천 후보에 들어간 회원 수 (나 포함)">회원 <b id="statMembers">0</b>명</span>
+    <span class="stat" title="점수 매칭에서 나와 한 명씩 비교하는 전체 인원 (가상 프로필 + 회원)">프로필 저장소 <b id="statPool">0</b>명</span>
+  </div>
   <div id="userBox" hidden><span id="userLabel"></span><button class="ghost" type="button" id="logoutBtn">로그아웃</button></div>
 </header>
 
@@ -215,7 +241,7 @@
     <button type="button" data-view="match">점수 매칭</button>
     <button type="button" data-view="today">오늘의 추천</button>
     <button type="button" data-view="ranking">인기 랭킹</button>
-    <button type="button" data-view="register">정보 등록</button>
+    <button type="button" id="chatBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg> 대화 <span class="countBadge" id="chatBadge" hidden></span></button>
   </nav>
 
   <!-- 커뮤니티 (홈) -->
@@ -263,10 +289,6 @@
         <div class="todayList" id="todayList"></div>
       </div>
       <div id="pickOut"></div>
-      <div class="card">
-        <h2>나에게 온 대화 요청 <span class="meta" id="recvCount"></span></h2>
-        <div id="recvList"></div>
-      </div>
     </section>
   </main>
 
@@ -284,11 +306,6 @@
   <main id="matchView">
     <section>
       <div class="card" id="mySummary"></div>
-      <div class="card">
-        <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
-        <div class="meta">추천은 내 프로필을 저장소의 모든 사람과 한 명씩 비교해서 계산해요.<br>
-          <span class="tag">가상</span> 미리 만든 프로필 · <span class="tag member">회원</span> 가입한 학생 · <span class="tag friend">직접 등록</span> 정보 등록에서 추가한 사람</div>
-      </div>
     </section>
     <section>
       <div class="card" id="weightCard">
@@ -331,30 +348,13 @@
     </section>
   </main>
 
-  <!-- 정보 등록 -->
-  <main id="registerView" hidden>
-    <section>
-      <div class="card">
-        <h2>정보 등록 <span class="meta">저장소에 사람을 직접 추가해요</span></h2>
-        <form id="regForm" onsubmit="return false"></form>
-        <div class="row" style="margin-top:14px">
-          <button class="ghost" type="button" id="regSampleBtn">랜덤 예시</button>
-          <button class="primary" type="button" id="regAddBtn" style="flex:1.4">저장소에 정보 등록</button>
-        </div>
-      </div>
-    </section>
-    <section>
-      <div class="card">
-        <h2>직접 등록한 정보 <span class="meta" id="regCount"></span></h2>
-        <div id="regList" class="meta"></div>
-        <div class="meta" style="margin-top:8px">직접 등록한 정보는 이 브라우저에만 저장돼요.</div>
-      </div>
-    </section>
-  </main>
 </div>
 
 <!-- 글쓴이 프로필 (커뮤니티 · 랭킹 · 대화 요청에서 사람을 누르면) -->
 <dialog class="card" id="userDlg" aria-label="프로필"></dialog>
+
+<!-- 대화: 받은 요청 · 대화 목록 · 채팅 -->
+<dialog class="card chatDlg" id="chatDlg" aria-label="대화"><div id="chatOut"></div></dialog>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -402,36 +402,45 @@ const DEFAULT_POINTS = { interest: 40, values: 40, life: 20 };
 const POINTS = { ...DEFAULT_POINTS };
 
 // ═══════════════════════════════════════════════════════════════════
-// 2. 프로필 저장소: 가상 프로필 20명 (+ 가입한 회원 + 정보 등록으로 추가한 사람)
+// 2. 프로필 저장소: 가상 프로필 20명 (+ 내 정보를 입력한 회원)
 //    a = 가치관 답 [연애 속도, 연락 빈도, 주말, 성격, 만남 목적]
 // ═══════════════════════════════════════════════════════════════════
-const P = (name, gender, age, region, dept, smoking, drinking, interests, a, pg, pmin, pmax, intro) => ({
+const P = (name, gender, age, region, dept, smoking, drinking, interests, a, pg, intro) => ({
   id: "v-" + name, source: "virtual", name, gender, age, region, dept, smoking, drinking, interests, intro,
   answers: Object.fromEntries(QUESTIONS.map((q, i) => [q.key, a[i]])),
-  prefer: { gender: pg, age_min: pmin, age_max: pmax },
+  prefer: { gender: pg },
 });
 const VIRTUAL = [
-  P("서윤", "여", 26, "서울", "영어영문학과", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "공강엔 도서관 옆 카페에서 책 읽어요"),
-  P("하린", "여", 27, "서울", "경영학과", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "축제랑 과 행사는 빠짐없이 가는 인싸예요"),
-  P("지우", "여", 25, "경기", "스포츠산업학과", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 동아리 사람들이랑 산이나 캠핑장에 가요"),
-  P("민서", "여", 29, "서울", "경영학과", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "학회 활동하면서 아침마다 러닝해요, 계획 세우는 게 취미"),
-  P("예린", "여", 24, "부산", "산업디자인학과", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "과제 없는 날엔 일러스트 그려요, 고양이 집사예요"),
-  P("수아", "여", 28, "서울", "컴퓨터공학과", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 동아리 회장, 밤새 코딩하는 올빼미형"),
-  P("채원", "여", 31, "서울", "유아교육학과", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "교육봉사 동아리에서 아이들 가르치는 게 행복해요"),
-  P("다은", "여", 26, "서울", "한국어문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "학보사 기자예요, 혼자 영화관 가는 것도 좋아해요"),
-  P("소연", "여", 27, "서울", "간호학과", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "실습 끝나면 영화 보면서 리뷰 쓰는 게 낙이에요"),
-  P("가은", "여", 30, "인천", "경영학과", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "창업 동아리에서 공모전 준비 중이에요"),
-  P("도윤", "남", 28, "서울", "경영학과", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "학교 헬스장 단골, 학교 앞 맛집은 다 알아요"),
-  P("시우", "남", 27, "경기", "음악학과", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드 동아리에서 기타 쳐요"),
-  P("준호", "남", 29, "서울", "영어영문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "영화 동아리에서 고전 영화 상영회를 열어요"),
-  P("태민", "남", 26, "경기", "스포츠산업학과", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "방학마다 서핑하러 바다 가요, 클라이밍도 해요"),
-  P("현우", "남", 31, "서울", "컴퓨터공학과", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "졸업반이라 취업 준비 중, 진지한 만남을 원해요"),
-  P("민재", "남", 27, "서울", "미디어디자인학과", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "축제 기획단이에요, 노는 게 제일 좋아"),
-  P("승현", "남", 25, "부산", "식품공학과", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "동물보호 동아리에서 봉사해요, 강아지랑 살아요"),
-  P("재원", "남", 28, "서울", "소프트웨어학과", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "알고리즘 스터디 하면서 SF 소설 읽어요"),
-  P("지환", "남", 33, "서울", "사회복지학과", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "학생회 복지국장을 맡고 있어요"),
-  P("우진", "남", 30, "대구", "자동차공학과", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "자동차 동아리에서 정비 배우고, 캠핑장에서 불멍해요"),
+  P("서윤", "여", 26, "서울", "영어영문학과", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", "공강엔 도서관 옆 카페에서 책 읽어요"),
+  P("하린", "여", 27, "서울", "경영학과", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", "축제랑 과 행사는 빠짐없이 가는 인싸예요"),
+  P("지우", "여", 25, "경기", "스포츠산업학과", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", "주말마다 동아리 사람들이랑 산이나 캠핑장에 가요"),
+  P("민서", "여", 29, "서울", "경영학과", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", "학회 활동하면서 아침마다 러닝해요, 계획 세우는 게 취미"),
+  P("예린", "여", 24, "부산", "산업디자인학과", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", "과제 없는 날엔 일러스트 그려요, 고양이 집사예요"),
+  P("수아", "여", 28, "서울", "컴퓨터공학과", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", "게임 동아리 회장, 밤새 코딩하는 올빼미형"),
+  P("채원", "여", 31, "서울", "유아교육학과", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", "교육봉사 동아리에서 아이들 가르치는 게 행복해요"),
+  P("다은", "여", 26, "서울", "한국어문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", "학보사 기자예요, 혼자 영화관 가는 것도 좋아해요"),
+  P("소연", "여", 27, "서울", "간호학과", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", "실습 끝나면 영화 보면서 리뷰 쓰는 게 낙이에요"),
+  P("가은", "여", 30, "인천", "경영학과", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", "창업 동아리에서 공모전 준비 중이에요"),
+  P("도윤", "남", 28, "서울", "경영학과", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", "학교 헬스장 단골, 학교 앞 맛집은 다 알아요"),
+  P("시우", "남", 27, "경기", "음악학과", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", "밴드 동아리에서 기타 쳐요"),
+  P("준호", "남", 29, "서울", "영어영문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", "영화 동아리에서 고전 영화 상영회를 열어요"),
+  P("태민", "남", 26, "경기", "스포츠산업학과", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", "방학마다 서핑하러 바다 가요, 클라이밍도 해요"),
+  P("현우", "남", 31, "서울", "컴퓨터공학과", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", "졸업반이라 취업 준비 중, 진지한 만남을 원해요"),
+  P("민재", "남", 27, "서울", "미디어디자인학과", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", "축제 기획단이에요, 노는 게 제일 좋아"),
+  P("승현", "남", 25, "부산", "식품공학과", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", "동물보호 동아리에서 봉사해요, 강아지랑 살아요"),
+  P("재원", "남", 28, "서울", "소프트웨어학과", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", "알고리즘 스터디 하면서 SF 소설 읽어요"),
+  P("지환", "남", 33, "서울", "사회복지학과", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", "학생회 복지국장을 맡고 있어요"),
+  P("우진", "남", 30, "대구", "자동차공학과", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", "자동차 동아리에서 정비 배우고, 캠핑장에서 불멍해요"),
 ];
+
+// 인기 랭킹 시연용: 가상 프로필마다 랜덤으로 정해 둔 기본 별점 [평균, 평가한 사람 수].
+// 실제로 받은 별점과 합쳐서 보여준다 (homeFrom).
+const SEED_RATINGS = {
+  "v-서윤": [3.6, 18], "v-하린": [3.0, 21], "v-지우": [3.3, 14], "v-민서": [4.7, 20], "v-예린": [3.9, 33],
+  "v-수아": [3.5, 31], "v-채원": [4.5, 35], "v-다은": [4.7, 18], "v-소연": [3.5, 13], "v-가은": [2.7, 9],
+  "v-도윤": [4.6, 13], "v-시우": [3.2, 34], "v-준호": [4.5, 9], "v-태민": [2.8, 14], "v-현우": [4.2, 21],
+  "v-민재": [4.0, 20], "v-승현": [4.3, 12], "v-재원": [2.6, 7], "v-지환": [3.6, 8], "v-우진": [4.6, 19],
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // 3. 계산 로직
@@ -448,15 +457,13 @@ function embedInterests(interests) {
 /** 벡터에서 가장 큰 성향 축 이름 */
 const topAxis = v => AXES[v.indexOf(Math.max(...v))];
 
-/** 걸러내기: 본인 → 성별 → 나이 (서로의 조건을 모두 확인) */
+/** 걸러내기: 본인 → 성별 (서로의 조건을 모두 확인). 나이는 다 같은 학교 학생이라 거르지 않는다 */
 function filterReasons(me, o) {
   if (o.id === me.id || (o.name === me.name && o.age === me.age && o.gender === me.gender)) return ["본인"];
   const r = [];
   const ok = (pref, g) => pref === "상관없음" || pref === g;
   if (!ok(me.prefer.gender, o.gender)) r.push(`내가 원하는 성별(${me.prefer.gender})이 아님`);
   if (!ok(o.prefer.gender, me.gender)) r.push(`상대가 원하는 성별(${o.prefer.gender})이 아님`);
-  if (o.age < me.prefer.age_min || o.age > me.prefer.age_max) r.push(`상대 ${o.age}세가 내 범위(${me.prefer.age_min}~${me.prefer.age_max}) 밖`);
-  if (me.age < o.prefer.age_min || me.age > o.prefer.age_max) r.push(`내 ${me.age}세가 상대 범위(${o.prefer.age_min}~${o.prefer.age_max}) 밖`);
   return r;
 }
 
@@ -548,6 +555,9 @@ const ERRORS = {
   bad_post: "글은 1~500자로 써주세요.",
   bad_comment: "댓글은 1~300자로 써주세요.",
   post_not_found: "삭제됐거나 없는 글이에요.",
+  not_connected: "대화 요청이 수락된 사람과만 채팅할 수 있어요.",
+  no_request: "이미 처리했거나 없는 대화 요청이에요.",
+  bad_message: "메시지는 1~500자로 보내주세요.",
 };
 
 async function rpc(fn, args = {}) {
@@ -580,9 +590,19 @@ const store = {
 let session = null;  // { token, user: { id, student_id, name, nickname, profile } }
 let members = [];    // 서버에서 받은 다른 회원 프로필
 // 오늘의 추천 · 별점 · 대화 요청 (서버 ml_home)
-const EMPTY_HOME = { limit: 5, today: [], given: {}, sent: [], received: [], ratings: {} };
+const EMPTY_HOME = { limit: 5, today: [], given: {}, sent: [], received: [], connected: [], ratings: {} };
 let home = EMPTY_HOME;
 let currentPick = null; // 오늘의 추천에서 보고 있는 사람 id
+
+/** 서버의 오늘의 추천 · 별점 정보 + 가상 프로필 기본 별점을 합친다 */
+function homeFrom(data) {
+  const h = { ...EMPTY_HOME, ...data, ratings: { ...data?.ratings } };
+  for (const [id, [avg, cnt]] of Object.entries(SEED_RATINGS)) {
+    const r = h.ratings[id], count = cnt + (r?.count ?? 0);
+    h.ratings[id] = { avg: (avg * cnt + (r ? r.avg * r.count : 0)) / count, count };
+  }
+  return h;
+}
 
 const PHOTO_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
 
@@ -601,14 +621,12 @@ function cleanProfile(p, extra) {
     answers: Object.fromEntries(QUESTIONS.map(q => [q.key, num(p.answers?.[q.key], 1, 5, 3)])),
     prefer: {
       gender: ["남", "여", "상관없음"].includes(p.prefer?.gender) ? p.prefer.gender : "상관없음",
-      age_min: num(p.prefer?.age_min, 19, 99, 19), age_max: num(p.prefer?.age_max, 19, 99, 99),
     },
   };
 }
 
 const myProfile = () => (session?.user.profile ? cleanProfile(session.user.profile, { id: session.user.id, name: session.user.nickname }) : null);
-const registered = () => store.get("friends", []);
-const pool = () => [...VIRTUAL, ...members, ...registered()];
+const pool = () => [...VIRTUAL, ...members];
 
 async function loadMembers() {
   const list = await rpc("ml_list_profiles", { p_token: session.token });
@@ -617,7 +635,7 @@ async function loadMembers() {
 }
 
 async function loadHome() {
-  home = { ...EMPTY_HOME, ...(await rpc("ml_home", { p_token: session.token })) };
+  home = homeFrom(await rpc("ml_home", { p_token: session.token }));
 }
 
 /** 별점 · 오늘의 추천 기록의 id → 프로필 (가상 프로필, 회원, 나) */
@@ -649,8 +667,10 @@ function showAuthTab(name) {
 }
 
 function showAuth(message = "") {
-  $("#appView").hidden = true; $("#userBox").hidden = true; $("#meAvatar").hidden = true; $("#authView").hidden = false;
+  $("#appView").hidden = true; $("#userBox").hidden = true; $("#meAvatar").hidden = true; $("#stats").hidden = true; $("#authView").hidden = false;
   if ($("#userDlg").open) $("#userDlg").close();
+  if ($("#chatDlg").open) $("#chatDlg").close();
+  chats = []; chatWith = null; messages = []; renderChatBadge();
   feed = null; currentPost = null;
   $("#loginForm").reset();
   showAuthTab("login");
@@ -727,10 +747,10 @@ const signupNick = nickChecker($("#signupForm [name=nick]"), $("#signupNickBtn")
 $("#logoutBtn").onclick = () => logout();
 
 // ═══════════════════════════════════════════════════════════════════
-// 6. 화면: 로그인 후 (점수 매칭 · 오늘의 추천 · 인기 랭킹 · 정보 등록 · 내 프로필 · 내 정보 수정)
+// 6. 화면: 로그인 후 (커뮤니티 · 점수 매칭 · 오늘의 추천 · 인기 랭킹 · 내 프로필 · 내 정보 수정)
 // ═══════════════════════════════════════════════════════════════════
 const VIEWS = {
-  feed: "#feedView", post: "#postView", match: "#matchView", today: "#todayView", ranking: "#rankingView", register: "#registerView",
+  feed: "#feedView", post: "#postView", match: "#matchView", today: "#todayView", ranking: "#rankingView",
   me: "#meView", profile: "#profileView",
 };
 let currentView = null;
@@ -751,7 +771,6 @@ function renderView() {
   if (currentView === "match") renderMySummary();
   if (currentView === "today") renderToday();
   if (currentView === "ranking") renderRanking();
-  if (currentView === "register") renderRegList();
   if (currentView === "me") renderMe();
 }
 document.querySelectorAll("nav.tabs button").forEach(b => (b.onclick = () => showView(b.dataset.view)));
@@ -767,15 +786,16 @@ document.addEventListener("click", e => {
 function renderHeader() {
   $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
   $("#meAvatar").innerHTML = avatarHTML(myProfile() ?? { name: session.user.nickname }, 44);
+  renderPoolCount();
 }
 
 function showApp() {
-  $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false; $("#meAvatar").hidden = false;
+  $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false; $("#meAvatar").hidden = false; $("#stats").hidden = false;
   renderHeader();
   $("#out").innerHTML = $("#howto").outerHTML;
-  Promise.allSettled([loadMembers(), loadHome()]).then(rs => {
+  Promise.allSettled([loadMembers(), loadHome(), loadChats()]).then(rs => {
     rs.forEach(r => r.status === "rejected" && console.warn(r.reason));
-    renderView();
+    renderView(); renderChatBadge();
   });
   if (session.user.profile) showView("feed");
   else {
@@ -785,12 +805,10 @@ function showApp() {
   }
 }
 
-// ── 프로필 입력 폼 (내 정보 수정 · 정보 등록에서 같이 씀) ──
-function profileFormHTML(mine) {
-  const nick = mine
-    ? `<div class="nickRow"><input name="name" maxlength="12" required><button class="ghost nickBtn" type="button">중복확인</button></div><div class="nickMsg" role="status"></div>`
-    : `<input name="name" maxlength="12" required>`;
-  const photo = mine ? `
+// ── 내 정보 입력 폼 ──
+function profileFormHTML() {
+  const nick = `<div class="nickRow"><input name="name" maxlength="12" required><button class="ghost nickBtn" type="button">중복확인</button></div><div class="nickMsg" role="status"></div>`;
+  const photo = `
     <label>프로필 사진</label>
     <div class="photoField">
       <span class="photoPreview"></span>
@@ -799,7 +817,7 @@ function profileFormHTML(mine) {
         <button class="link" type="button" data-photo-del>사진 삭제</button>
         <div class="meta" style="margin-top:6px">가운데를 정사각형으로 잘라 작게 줄여서 저장해요.</div>
       </div>
-    </div>` : "";
+    </div>`;
   return `${photo}
     <div class="row">
       <div><label>닉네임</label>${nick}</div>
@@ -820,13 +838,9 @@ function profileFormHTML(mine) {
     <label>가치관 · 성향</label>
     ${QUESTIONS.map(q => `<div class="q"><span>${q.label}</span>
       <select name="q_${q.key}">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 3 ? "selected" : ""}>${n}${n === 1 ? " " + q.low : n === 5 ? " " + q.high : ""}</option>`).join("")}</select></div>`).join("")}
-    <div class="row">
-      <div><label>원하는 상대 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select></div>
-      <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" min="19" max="99" value="20"><input name="pmax" type="number" min="19" max="99" value="28"></div></div>
-    </div>`;
+    <label>원하는 상대 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select>`;
 }
-$("#meForm").innerHTML = profileFormHTML(true);
-$("#regForm").innerHTML = profileFormHTML(false);
+$("#meForm").innerHTML = profileFormHTML();
 
 function readForm(form) {
   const f = Object.fromEntries(new FormData(form));
@@ -835,7 +849,7 @@ function readForm(form) {
     smoking: f.smoking === "true", drinking: f.drinking, intro: f.intro.trim(),
     interests: [...form.querySelectorAll(".chips input:checked")].map(x => x.value),
     answers: Object.fromEntries(QUESTIONS.map(q => [q.key, +f["q_" + q.key]])),
-    prefer: { gender: f.pgender, age_min: +f.pmin, age_max: +f.pmax },
+    prefer: { gender: f.pgender },
   };
 }
 
@@ -845,13 +859,12 @@ function fillForm(form, p) {
   f.smoking.value = String(!!p.smoking);
   form.querySelectorAll(".chips input").forEach(x => (x.checked = (p.interests ?? []).includes(x.value)));
   QUESTIONS.forEach(q => (f["q_" + q.key].value = p.answers?.[q.key] ?? 3));
-  if (p.prefer) { f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max; }
+  if (p.prefer) f.pgender.value = p.prefer.gender;
 }
 
 function validate(form, p) {
   if (!form.reportValidity()) return false;
   if (!p.interests.length) { alert("관심사를 하나 이상 골라주세요."); return false; }
-  if (p.prefer.age_min > p.prefer.age_max) { alert("원하는 나이 범위를 확인해 주세요."); return false; }
   return true;
 }
 
@@ -873,20 +886,23 @@ function renderMySummary() {
       <dt>관심사</dt><dd>${me.interests.map(esc).join(", ")}</dd>
       <dt>가치관</dt><dd>${ans}</dd>
       <dt>생활</dt><dd>${me.smoking ? "흡연" : "비흡연"} · 음주 ${esc(me.drinking)}</dd>
-      <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)} · ${me.prefer.age_min}~${me.prefer.age_max}세</dd>
+      <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)}</dd>
     </dl>
     <button class="ghost" type="button" onclick="showView('profile')">내 정보 수정</button>`;
 }
 
+/** 상단 현황: 회원 수 (내 정보를 입력한 회원, 나 포함) · 프로필 저장소 인원 */
 function renderPoolCount() {
-  $("#poolCount").textContent = `${pool().length}명 (가상 ${VIRTUAL.length} · 회원 ${members.length} · 직접 등록 ${registered().length})`;
+  const n = members.length + (myProfile() ? 1 : 0);
+  $("#statMembers").textContent = n;
+  $("#statPool").textContent = VIRTUAL.length + n;
 }
 
 async function startMatch() {
   const me = myProfile();
   if (!me) { showView("profile"); return; }
   await withBusy($("#matchBtn"), async () => {
-    try { await loadMembers(); } catch (err) { alert("회원 목록을 불러오지 못해서 가상 프로필과 직접 등록한 정보로만 추천해요.\n" + err.message); }
+    try { await loadMembers(); } catch (err) { alert("회원 목록을 불러오지 못해서 가상 프로필로만 추천해요.\n" + err.message); }
     runMatch(me);
   });
 }
@@ -974,32 +990,6 @@ $("#withdrawBtn").onclick = () => withBusy($("#withdrawBtn"), async () => {
   } catch (err) { $("#withdrawMsg").className = "msg err"; $("#withdrawMsg").textContent = err.message; }
 });
 
-// ── 정보 등록 화면 (저장소에 직접 추가, 이 브라우저에만 저장) ──
-function renderRegList() {
-  const list = registered();
-  $("#regCount").textContent = `${list.length}명`;
-  $("#regList").innerHTML = list.length
-    ? list.map(p => `<div style="padding:4px 0">${esc(p.name)} <span class="meta">${esc(p.gender)} · ${esc(p.age)}세 · ${esc(p.dept)}</span>
-        <button class="link" type="button" data-del="${esc(p.id)}">삭제</button></div>`).join("")
-    : "아직 등록한 정보가 없어요.";
-  renderPoolCount();
-}
-$("#regList").onclick = e => {
-  const id = e.target.dataset.del;
-  if (!id) return;
-  store.set("friends", registered().filter(p => p.id !== id));
-  renderRegList();
-};
-$("#regAddBtn").onclick = () => {
-  const form = $("#regForm"), p = readForm(form);
-  if (!validate(form, p)) return;
-  store.set("friends", [...registered(), { ...p, id: "f-" + Date.now().toString(36), source: "friend" }]);
-  form.reset();
-  form.querySelectorAll(".chips input").forEach(x => (x.checked = false));
-  renderRegList();
-  alert(`${p.name}님의 정보를 저장소에 등록했어요.`);
-};
-$("#regSampleBtn").onclick = () => fillForm($("#regForm"), randomSample());
 
 // ═══════════════════════════════════════════════════════════════════
 // 7. 결과 화면: 점수 계산 방법 · 레이더 차트 · 기준 슬라이더 · 1위 설명 · 점수표
@@ -1007,7 +997,7 @@ $("#regSampleBtn").onclick = () => fillForm($("#regForm"), randomSample());
 function renderHowto() {
   $("#howto").innerHTML = `<h2>점수 계산 방법 (100점)</h2>
   <ul>
-    <li><b>걸러내기</b> — 본인, 서로 원하는 성별·나이가 안 맞는 사람은 점수 계산 전에 제외</li>
+    <li><b>걸러내기</b> — 본인, 서로 원하는 성별이 안 맞는 사람은 점수 계산 전에 제외</li>
     <li><b>관심사 ${POINTS.interest}점</b> — 관심사를 6가지 성향 축(${AXES.join(", ")}) 벡터로 임베딩해 코사인 유사도 계산</li>
     <li><b>가치관 ${POINTS.values}점</b> — 5개 질문 답(1~5)의 차이가 작을수록 높음</li>
     <li><b>생활 조건 ${POINTS.life}점</b> — 나이차 · 지역 · 흡연 · 음주</li>
@@ -1070,7 +1060,6 @@ const isDefaultPoints = () => SLIDERS.every(s => POINTS[s.key] === DEFAULT_POINT
 const SOURCE_TAG = {
   virtual: '<span class="tag">가상</span>',
   member: '<span class="tag member">회원</span>',
-  friend: '<span class="tag friend">직접 등록</span>',
 };
 
 function runMatch(me, { scroll = true } = {}) {
@@ -1217,14 +1206,6 @@ function renderToday() {
     ? `<div class="card empty">내 정보를 먼저 입력해야 추천을 받을 수 있어요.<br><button class="primary" type="button" data-go="profile" style="margin-top:12px">내 정보 입력하러 가기</button></div>`
     : p ? pickCardHTML(me, p) : `<div class="card empty">버튼을 눌러 오늘의 첫 추천을 받아보세요!</div>`;
 
-  $("#recvCount").textContent = home.received.length ? `${home.received.length}건` : "";
-  $("#recvList").innerHTML = home.received.length
-    ? home.received.map(x => {
-        const m = members.find(m => m.id === x.id);
-        return `<div class="person"><button class="whoBtn" type="button" data-user="${esc(x.id)}" data-nick="${esc(x.nickname)}" aria-label="${esc(x.nickname)}님 프로필">${avatarHTML(m ?? { name: x.nickname }, 42)}</button><div><b>${esc(x.nickname)}</b>님이 대화를 요청했어요
-          <div class="meta">${m ? `${esc(m.dept)} · ${m.age}세 · ` : ""}${new Date(x.at).toLocaleDateString("ko-KR")}</div></div></div>`;
-      }).join("")
-    : `<div class="meta">아직 받은 대화 요청이 없어요.</div>`;
 }
 
 function pickCardHTML(me, p) {
@@ -1236,7 +1217,7 @@ function pickCardHTML(me, p) {
     ${p.intro ? `<div class="intro">${esc(p.intro)}</div>` : ""}
     <div class="acts">
       <button class="ghost pass" type="button" data-act="pass">패스</button>
-      <button class="primary" type="button" data-act="chat" ${sent ? "disabled" : ""}>${sent ? "대화 요청 보냄 ✓" : "대화 요청 하기"}</button>
+      ${chatButtonHTML(p.id, "act")}
     </div>
     ${sent && p.source === "virtual" ? `<div class="meta" style="margin-top:8px">가상 프로필이라 실제로 전달되지는 않아요.</div>` : ""}
     ${botHTML("교만추 매칭 봇 알림", `<b>${esc(p.name)}</b>님과 <b>${esc(me.name)}</b>님의 매칭 결과예요. 항목별 궁합을 합친 점수는 <b>${s.total}점</b> / 100이에요.`)}
@@ -1262,7 +1243,7 @@ async function drawToday() {
       o.id !== me.id && !seen.has(o.id) && ok(me.prefer.gender, o.gender) && ok(o.prefer.gender, me.gender));
     if (!cands.length) return msg("오늘 새로 추천할 수 있는 사람이 없어요.");
     const o = pick(cands);
-    home = { ...EMPTY_HOME, ...(await rpc("ml_draw", { p_token: session.token, p_target: o.id })) };
+    home = homeFrom(await rpc("ml_draw", { p_token: session.token, p_target: o.id }));
     currentPick = o.id;
   } catch (err) { msg(err.message); }
 }
@@ -1274,6 +1255,7 @@ $("#todayList").onclick = e => {
 $("#pickOut").onclick = async e => {
   const b = e.target.closest("button[data-act], button[data-star]");
   if (!b || !currentPick) return;
+  if (b.dataset.act === "open-chat") return openChat(currentPick);
   if (b.dataset.act === "pass") {
     if (home.today.length < home.limit) return $("#drawBtn").click();
     $("#drawMsg").className = "msg err"; $("#drawMsg").textContent = "오늘 추천을 다 받았어요. 내일 또 만나요!";
@@ -1283,7 +1265,7 @@ $("#pickOut").onclick = async e => {
     ? ["ml_chat_request", { p_token: session.token, p_target: currentPick }]
     : ["ml_rate", { p_token: session.token, p_target: currentPick, p_stars: +b.dataset.star }];
   b.disabled = true;
-  try { home = { ...EMPTY_HOME, ...(await rpc(fn, args)) }; } catch (err) { alert(err.message); }
+  try { home = homeFrom(await rpc(fn, args)); } catch (err) { alert(err.message); }
   renderToday();
 };
 
@@ -1295,7 +1277,7 @@ function renderRanking() {
   $("#rankList").innerHTML = rows.length
     ? rows.map((x, i) => `<li class="r${i + 1}">
         <span class="no">${i + 1}</span><button class="whoBtn" type="button" ${userAttrs(x.p)} aria-label="${esc(x.p.name)}님 프로필">${avatarHTML(x.p, 48)}</button>
-        <div class="who"><b>${esc(x.p.name)}</b> ${x.p.id === session.user.id ? '<span class="tag friend">나</span>' : SOURCE_TAG[x.p.source] ?? ""}
+        <div class="who"><b>${esc(x.p.name)}</b> ${x.p.id === session.user.id ? '<span class="tag me">나</span>' : SOURCE_TAG[x.p.source] ?? ""}
           <div class="meta">${esc(x.p.dept)} · ${x.p.age}세 · ${esc(x.p.region)}</div></div>
         <div class="score">${starsHTML(x.avg, 18)}<div><b>${x.avg.toFixed(1)}</b> <span class="meta">/ 5 · ${x.count}명</span></div></div>
       </li>`).join("")
@@ -1320,7 +1302,7 @@ function timeAgo(at) {
 /** 글 · 댓글 쓴 사람: 가상 프로필 · 프로필 있는 회원은 그 프로필, 아니면 닉네임만 */
 const authorOf = (id, nickname) => byId(id) ?? { id, name: nickname ?? "알 수 없음" };
 const userAttrs = a => `data-user="${esc(a.id)}" data-nick="${esc(a.name)}"`;
-const authorTag = a => (a.id === session.user.id ? '<span class="tag friend">나</span>' : SOURCE_TAG[a.source] ?? SOURCE_TAG.member);
+const authorTag = a => (a.id === session.user.id ? '<span class="tag me">나</span>' : SOURCE_TAG[a.source] ?? SOURCE_TAG.member);
 
 async function refreshFeed() {
   try { feed = await rpc("ml_feed", { p_token: session.token }); } catch (err) { console.warn(err); feed ??= []; }
@@ -1450,9 +1432,13 @@ function renderUserDlg() {
     ${r ? `<div style="margin-top:10px">${starsHTML(r.avg, 20)} <b>${r.avg.toFixed(1)}</b> <span class="meta">/ 5 · ${r.count}명</span></div>` : ""}
     ${p && me ? botHTML("교만추 매칭 봇 알림", `<b>${esc(name)}</b>님과 <b>${esc(me.name)}</b>님의 항목별 궁합이에요. 합친 점수는 <b>${scoreOne(me, p, DEFAULT_POINTS).total}점</b> / 100이에요.`) + pctGridHTML(catPct(me, p)) : ""}
     <div class="acts" style="display:flex; gap:10px; margin-top:18px">
-      <button class="ghost" type="button" data-dlg="close" style="flex:1">닫기</button>
-      <button class="primary" type="button" data-dlg="chat" style="flex:2" ${sent ? "disabled" : ""}>${sent ? "대화 요청 보냄 ✓" : "대화 요청 하기"}</button>
+      ${home.received.some(x => x.id === id)
+        ? `<button class="ghost" type="button" data-dlg="decline" style="flex:1">거절</button>
+           <button class="primary" type="button" data-dlg="accept" style="flex:2">수락하고 대화하기</button>`
+        : `<button class="ghost" type="button" data-dlg="close" style="flex:1">닫기</button>${chatButtonHTML(id, "dlg", "flex:2")}`}
     </div>
+    ${home.received.some(x => x.id === id) ? `<div class="meta" style="margin-top:8px">${esc(name)}님이 대화를 요청했어요. 수락하면 바로 채팅할 수 있어요.</div>` : ""}
+    ${sent && !home.connected.includes(id) && p?.source !== "virtual" ? `<div class="meta" style="margin-top:8px">상대가 수락하면 대화 상자에서 채팅할 수 있어요.</div>` : ""}
     ${sent && p?.source === "virtual" ? `<div class="meta" style="margin-top:8px">가상 프로필이라 실제로 전달되지는 않아요.</div>` : ""}
     <div class="msg" id="dlgMsg"></div></div>`;
 }
@@ -1460,17 +1446,163 @@ $("#userDlg").onclick = async e => {
   if (e.target === $("#userDlg")) return $("#userDlg").close(); // 바깥(배경) 클릭
   const b = e.target.closest("[data-dlg]");
   if (!b) return;
-  if (b.dataset.dlg === "close") return $("#userDlg").close();
+  const act = b.dataset.dlg, id = dlgUser.id;
+  if (act === "close") return $("#userDlg").close();
+  if (act === "open-chat") { $("#userDlg").close(); return openChat(id, dlgUser.nickname); }
   b.disabled = true;
   try {
-    home = { ...EMPTY_HOME, ...(await rpc("ml_chat_request", { p_token: session.token, p_target: dlgUser.id })) };
-    renderUserDlg(); renderView();
+    home = homeFrom(act === "chat"
+      ? await rpc("ml_chat_request", { p_token: session.token, p_target: id })
+      : await rpc("ml_respond_request", { p_token: session.token, p_from: id, p_accept: act === "accept" }));
+    renderView(); renderChatBadge();
+    if (act === "accept") { $("#userDlg").close(); return openChat(id, dlgUser.nickname); }
+    if (act === "decline") { $("#userDlg").close(); if ($("#chatDlg").open) renderChat(); return; }
+    renderUserDlg();
   } catch (err) { b.disabled = false; $("#dlgMsg").className = "msg err"; $("#dlgMsg").textContent = err.message; }
 };
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-user]");
   if (b && !$("#appView").hidden) openUser(b.dataset.user, b.dataset.nick);
 });
+
+/** 대화 버튼: 연결됨 → 대화하기, 요청함 → 요청 보냄, 아니면 대화 요청 하기 (kind: data-act / data-dlg) */
+function chatButtonHTML(id, kind, style = "") {
+  if (home.connected.includes(id)) return `<button class="primary" type="button" data-${kind}="open-chat" style="${style}">대화하기</button>`;
+  const sent = home.sent.includes(id);
+  return `<button class="primary" type="button" data-${kind}="chat" style="${style}" ${sent ? "disabled" : ""}>${sent ? "대화 요청 보냄 ✓" : "대화 요청 하기"}</button>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 10. 대화: 받은 요청을 상대 프로필을 보고 수락 → 채팅 (4초마다 새 메시지 확인)
+// ═══════════════════════════════════════════════════════════════════
+let chats = [];       // 대화 목록 { id, nickname, last_body, last_at, unread }
+let chatWith = null;  // 지금 채팅 중인 사람 { id, nickname } (null = 목록)
+let messages = [];
+
+async function loadChats() { chats = await rpc("ml_chats", { p_token: session.token }); }
+
+function renderChatBadge() {
+  const n = session ? home.received.length + chats.reduce((s, c) => s + +c.unread, 0) : 0;
+  $("#chatBadge").hidden = !n;
+  $("#chatBadge").textContent = n > 99 ? "99+" : n;
+}
+
+async function refreshChats() {
+  if (!session) return;
+  try {
+    const [c, h] = await Promise.all([rpc("ml_chats", { p_token: session.token }), rpc("ml_home", { p_token: session.token })]);
+    chats = c; home = homeFrom(h);
+  } catch (err) { console.warn(err); }
+  renderChatBadge();
+  if ($("#chatDlg").open && !chatWith) renderChat();
+}
+
+const timeOf = at => new Date(at).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
+
+function renderChat() {
+  if (chatWith) return renderConversation();
+  const rec = home.received;
+  $("#chatOut").innerHTML = `
+    <div class="chatTop"><h2 style="margin:0">대화</h2><button class="ghost" type="button" data-chat="close">닫기</button></div>
+    <h3>받은 대화 요청 ${rec.length ? `<span class="countBadge">${rec.length}</span>` : ""}</h3>
+    ${rec.length ? rec.map(x => {
+        const m = members.find(m => m.id === x.id);
+        return `<div class="person">${avatarHTML(m ?? { name: x.nickname }, 42)}
+          <div style="flex:1; min-width:0"><b>${esc(x.nickname)}</b>님이 대화를 요청했어요
+            <div class="meta">${m ? `${esc(m.dept)} · ${m.age}세 · ` : ""}${timeAgo(x.at)}</div></div>
+          <button class="primary" type="button" data-user="${esc(x.id)}" data-nick="${esc(x.nickname)}" style="flex:none; font-size:14px">프로필 보고 수락</button></div>`;
+      }).join("") : `<div class="meta">받은 대화 요청이 없어요.</div>`}
+    <h3>대화 목록</h3>
+    ${chats.length ? chats.map(c => {
+        const a = authorOf(c.id, c.nickname);
+        return `<button class="chatRow" type="button" data-open="${esc(c.id)}">${avatarHTML(a, 46)}
+          <span class="cr"><b>${esc(a.name)}</b> <span class="meta">${timeAgo(c.last_at)}</span>
+            <span class="last">${c.last_body ? esc(c.last_body) : "대화가 연결됐어요. 먼저 인사해 보세요!"}</span></span>
+          ${+c.unread ? `<span class="countBadge">${c.unread}</span>` : ""}</button>`;
+      }).join("") : `<div class="meta">아직 대화가 없어요. 대화 요청이 수락되면 여기서 채팅할 수 있어요.</div>`}`;
+}
+
+function renderConversation() {
+  const a = authorOf(chatWith.id, chatWith.nickname);
+  $("#chatOut").innerHTML = `
+    <div class="chatTop">
+      <button class="link" type="button" data-chat="back">← 목록</button>
+      <button class="whoBtn" type="button" ${userAttrs(a)}>${avatarHTML(a, 36)} <b>${esc(a.name)}</b></button>
+      <button class="ghost" type="button" data-chat="close">닫기</button>
+    </div>
+    <div class="msgs" id="msgs"><div class="empty">불러오는 중…</div></div>
+    <form class="row" id="msgForm" style="margin-top:10px">
+      <input id="msgBody" maxlength="500" placeholder="메시지 보내기" autocomplete="off">
+      <button class="primary" type="submit" style="flex:none">보내기</button>
+    </form>
+    <div class="msg" id="chatMsg"></div>`;
+  $("#msgForm").onsubmit = sendMessage;
+  $("#msgBody").focus();
+}
+
+function renderMessages() {
+  const box = $("#msgs");
+  if (!box) return;
+  box.innerHTML = messages.length
+    ? messages.map(m => `<div class="m ${m.mine ? "mine" : ""}"><div class="b">${esc(m.body)}</div><span class="meta">${timeOf(m.at)}</span></div>`).join("")
+    : `<div class="empty">첫 메시지를 보내보세요!</div>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+async function openChat(id, nickname) {
+  chatWith = { id, nickname: nickname ?? chats.find(c => c.id === id)?.nickname ?? byId(id)?.name };
+  messages = [];
+  if (!$("#chatDlg").open) $("#chatDlg").showModal();
+  renderChat();
+  await loadMessages(true);
+}
+
+async function loadMessages(force = false) {
+  const id = chatWith?.id;
+  if (!id) return;
+  try {
+    const list = await rpc("ml_messages", { p_token: session.token, p_other: id });
+    if (chatWith?.id !== id) return;
+    const changed = force || list.length !== messages.length || list.at(-1)?.id !== messages.at(-1)?.id;
+    messages = list;
+    if (changed) renderMessages();
+    const c = chats.find(c => c.id === id);
+    if (c) { c.unread = 0; renderChatBadge(); }
+  } catch (err) { if ($("#chatMsg")) { $("#chatMsg").className = "msg err"; $("#chatMsg").textContent = err.message; } }
+}
+
+async function sendMessage(e) {
+  e.preventDefault();
+  const input = $("#msgBody"), body = input.value.trim(), btn = e.target.querySelector("button"), id = chatWith.id;
+  if (!body) return;
+  btn.disabled = true;
+  try {
+    const list = await rpc("ml_send_message", { p_token: session.token, p_other: id, p_body: body });
+    input.value = "";
+    if (chatWith?.id === id) { messages = list; renderMessages(); }
+  } catch (err) { $("#chatMsg").className = "msg err"; $("#chatMsg").textContent = err.message; }
+  finally { btn.disabled = false; input.focus(); }
+}
+
+$("#chatBtn").onclick = () => { chatWith = null; $("#chatDlg").showModal(); renderChat(); refreshChats(); };
+$("#chatDlg").onclick = e => {
+  if (e.target === $("#chatDlg")) return $("#chatDlg").close(); // 바깥(배경) 클릭
+  const b = e.target.closest("[data-chat], [data-open]");
+  if (!b) return;
+  if (b.dataset.chat === "close") return $("#chatDlg").close();
+  if (b.dataset.chat === "back") { chatWith = null; renderChat(); return refreshChats(); }
+  if (b.dataset.open) openChat(b.dataset.open);
+};
+$("#chatDlg").onclose = () => { chatWith = null; messages = []; };
+
+// 열려 있는 채팅은 4초마다, 대화 목록 · 받은 요청 수는 20초마다 새로 확인
+let pollTick = 0;
+setInterval(() => {
+  if (!session || document.hidden) return;
+  pollTick++;
+  if ($("#chatDlg").open && chatWith) loadMessages();
+  if (pollTick % 5 === 0) refreshChats();
+}, 4000);
 
 // ── 랜덤 예시: 누를 때마다 입력 항목들 중에서 무작위로 골라 새 사람을 만든다 ──
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
@@ -1498,12 +1630,12 @@ function randomSample() {
     intro: `요즘 빠져 있는 건 ${interests[0]}, ${interests[1]}`,
     interests,
     answers: Object.fromEntries(QUESTIONS.map(q => [q.key, randInt(1, 5)])),
-    prefer: { gender: gender === "남" ? "여" : "남", age_min: Math.max(19, age - 4), age_max: age + 4 },
+    prefer: { gender: gender === "남" ? "여" : "남" },
   };
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 10. 시작: 저장된 로그인 토큰이 있으면 자동 로그인
+// 11. 시작: 저장된 로그인 토큰이 있으면 자동 로그인
 // ═══════════════════════════════════════════════════════════════════
 (async () => {
   const token = store.get("token", null);

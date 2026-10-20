@@ -62,6 +62,29 @@ create table if not exists public.ml_chat_requests (
   primary key (from_id, target)
 );
 
+-- 대화 요청 상태: 받은 사람이 프로필을 보고 수락(accepted) / 거절(declined)
+alter table public.ml_chat_requests add column if not exists status text not null default 'pending';
+alter table public.ml_chat_requests add column if not exists responded_at timestamptz;
+alter table public.ml_chat_requests drop constraint if exists ml_chat_requests_status_check;
+alter table public.ml_chat_requests add constraint ml_chat_requests_status_check check (status in ('pending', 'accepted', 'declined'));
+
+-- 채팅: 대화 요청이 수락된 두 사람만 주고받을 수 있다
+create table if not exists public.ml_messages (
+  id         bigint generated always as identity primary key,
+  from_id    uuid not null references public.ml_users(id) on delete cascade,
+  to_id      uuid not null references public.ml_users(id) on delete cascade,
+  body       text not null check (char_length(body) between 1 and 500),
+  created_at timestamptz not null default now()
+);
+create index if not exists ml_messages_pair on public.ml_messages (least(from_id, to_id), greatest(from_id, to_id), id);
+-- 어디까지 읽었는지 (안 읽은 메시지 수 표시용)
+create table if not exists public.ml_chat_reads (
+  user_id      uuid not null references public.ml_users(id) on delete cascade,
+  other_id     uuid not null references public.ml_users(id) on delete cascade,
+  last_read_id bigint not null default 0,
+  primary key (user_id, other_id)
+);
+
 -- 커뮤니티: 글 + 댓글. 글쓴이는 회원(author_id) 이거나, 처음 화면이 비지 않게 넣어 둔 가상 프로필(author_v)
 create table if not exists public.ml_posts (
   id         bigint generated always as identity primary key,
@@ -99,8 +122,10 @@ alter table public.ml_ratings       enable row level security;
 alter table public.ml_chat_requests enable row level security;
 alter table public.ml_posts         enable row level security;
 alter table public.ml_comments      enable row level security;
+alter table public.ml_messages      enable row level security;
+alter table public.ml_chat_reads    enable row level security;
 revoke all on public.ml_users, public.ml_sessions, public.ml_draws, public.ml_ratings, public.ml_chat_requests,
-              public.ml_posts, public.ml_comments from anon, authenticated;
+              public.ml_posts, public.ml_comments, public.ml_messages, public.ml_chat_reads from anon, authenticated;
 
 -- 4) 함수 ----------------------------------------------------------------------
 
@@ -270,7 +295,10 @@ returns json language sql stable security definer set search_path = public as $$
     'sent', coalesce((select json_agg(target) from ml_chat_requests where from_id = uid), '[]'::json),
     'received', coalesce((select json_agg(json_build_object('id', u.id, 'nickname', u.nickname, 'at', c.created_at) order by c.created_at desc)
                           from ml_chat_requests c join ml_users u on u.id = c.from_id
-                          where c.target = uid::text), '[]'::json),
+                          where c.target = uid::text and c.status = 'pending'), '[]'::json),
+    'connected', coalesce((select json_agg(distinct case when c.from_id = uid then c.target else c.from_id::text end)
+                           from ml_chat_requests c
+                           where c.status = 'accepted' and (c.from_id = uid or c.target = uid::text)), '[]'::json),
     'ratings', coalesce((select json_object_agg(target, json_build_object('avg', round(a, 2), 'count', n))
                          from (select target, avg(stars) a, count(*) n from ml_ratings group by target) t), '{}'::json)
   );
@@ -317,7 +345,92 @@ begin
     raise exception 'bad_target';
   end if;
   insert into ml_chat_requests (from_id, target) values (uid, p_target) on conflict do nothing;
+  -- 상대도 이미 나에게 요청했다면 서로 원하는 것이니 바로 연결
+  if exists (select 1 from ml_chat_requests where from_id::text = p_target and target = uid::text and status = 'pending') then
+    update ml_chat_requests set status = 'accepted', responded_at = now()
+    where (from_id::text = p_target and target = uid::text) or (from_id = uid and target = p_target);
+  end if;
   return ml_home_json(uid);
+end $$;
+
+-- 받은 대화 요청에 답하기: 수락하면 채팅 시작
+create or replace function public.ml_respond_request(p_token uuid, p_from uuid, p_accept boolean)
+returns json language plpgsql security definer set search_path = public as $$
+declare uid uuid := ml_session_user(p_token);
+begin
+  update ml_chat_requests set status = case when p_accept then 'accepted' else 'declined' end, responded_at = now()
+  where from_id = p_from and target = uid::text and status = 'pending';
+  if not found then raise exception 'no_request'; end if;
+  return ml_home_json(uid);
+end $$;
+
+-- 채팅 ------------------------------------------------------------------------
+create or replace function public.ml_connected(a uuid, b uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from ml_chat_requests
+                 where status = 'accepted' and ((from_id = a and target = b::text) or (from_id = b and target = a::text)));
+$$;
+
+-- 대화 목록: 연결된 사람마다 마지막 메시지 · 안 읽은 수
+create or replace function public.ml_chats_json(uid uuid)
+returns json language sql stable security definer set search_path = public as $$
+  with others as (
+    select case when c.from_id = uid then c.target::uuid else c.from_id end as other, max(c.responded_at) as since
+    from ml_chat_requests c
+    where c.status = 'accepted' and (c.from_id = uid or c.target = uid::text)
+    group by 1
+  )
+  select coalesce(json_agg(x order by x.last_at desc), '[]'::json) from (
+    select u.id, u.nickname, m.body as last_body, coalesce(m.created_at, o.since) as last_at,
+           (select count(*) from ml_messages mm
+            where mm.from_id = o.other and mm.to_id = uid
+              and mm.id > coalesce((select last_read_id from ml_chat_reads r where r.user_id = uid and r.other_id = o.other), 0)) as unread
+    from others o join ml_users u on u.id = o.other
+    left join lateral (select body, created_at from ml_messages
+                       where (from_id = uid and to_id = o.other) or (from_id = o.other and to_id = uid)
+                       order by id desc limit 1) m on true
+  ) x;
+$$;
+
+-- 두 사람의 메시지 (최근 200개). 읽으면 읽은 위치를 기록한다
+create or replace function public.ml_messages_json(uid uuid, p_other uuid)
+returns json language plpgsql security definer set search_path = public as $$
+declare r json; last_id bigint;
+begin
+  if not ml_connected(uid, p_other) then raise exception 'not_connected'; end if;
+  select coalesce(json_agg(json_build_object('id', id, 'mine', from_id = uid, 'body', body, 'at', created_at) order by id), '[]'::json), max(id)
+  into r, last_id
+  from (select * from ml_messages
+        where (from_id = uid and to_id = p_other) or (from_id = p_other and to_id = uid)
+        order by id desc limit 200) t;
+  if last_id is not null then
+    insert into ml_chat_reads (user_id, other_id, last_read_id) values (uid, p_other, last_id)
+    on conflict (user_id, other_id) do update set last_read_id = greatest(ml_chat_reads.last_read_id, excluded.last_read_id);
+  end if;
+  return r;
+end $$;
+
+create or replace function public.ml_chats(p_token uuid)
+returns json language plpgsql stable security definer set search_path = public as $$
+begin
+  return ml_chats_json(ml_session_user(p_token));
+end $$;
+
+create or replace function public.ml_messages(p_token uuid, p_other uuid)
+returns json language plpgsql security definer set search_path = public as $$
+begin
+  return ml_messages_json(ml_session_user(p_token), p_other);
+end $$;
+
+create or replace function public.ml_send_message(p_token uuid, p_other uuid, p_body text)
+returns json language plpgsql security definer set search_path = public as $$
+declare uid uuid := ml_session_user(p_token);
+begin
+  p_body := trim(p_body);
+  if char_length(coalesce(p_body, '')) not between 1 and 500 then raise exception 'bad_message'; end if;
+  if not ml_connected(uid, p_other) then raise exception 'not_connected'; end if;
+  insert into ml_messages (from_id, to_id, body) values (uid, p_other, p_body);
+  return ml_messages_json(uid, p_other);
 end $$;
 
 -- 커뮤니티 ---------------------------------------------------------------------
@@ -410,7 +523,9 @@ revoke all on function
   public.ml_draw(uuid, text), public.ml_rate(uuid, text, int), public.ml_chat_request(uuid, text),
   public.ml_feed_json(uuid), public.ml_post_json(uuid, bigint), public.ml_feed(uuid), public.ml_post(uuid, bigint),
   public.ml_write_post(uuid, text), public.ml_write_comment(uuid, bigint, text),
-  public.ml_delete_post(uuid, bigint), public.ml_delete_comment(uuid, bigint)
+  public.ml_delete_post(uuid, bigint), public.ml_delete_comment(uuid, bigint),
+  public.ml_respond_request(uuid, uuid, boolean), public.ml_connected(uuid, uuid), public.ml_chats_json(uuid),
+  public.ml_messages_json(uuid, uuid), public.ml_chats(uuid), public.ml_messages(uuid, uuid), public.ml_send_message(uuid, uuid, text)
 from public, anon, authenticated;
 
 grant execute on function
@@ -419,5 +534,6 @@ grant execute on function
   public.ml_list_profiles(uuid), public.ml_delete_account(uuid, text),
   public.ml_home(uuid), public.ml_draw(uuid, text), public.ml_rate(uuid, text, int), public.ml_chat_request(uuid, text),
   public.ml_feed(uuid), public.ml_post(uuid, bigint), public.ml_write_post(uuid, text), public.ml_write_comment(uuid, bigint, text),
-  public.ml_delete_post(uuid, bigint), public.ml_delete_comment(uuid, bigint)
+  public.ml_delete_post(uuid, bigint), public.ml_delete_comment(uuid, bigint),
+  public.ml_respond_request(uuid, uuid, boolean), public.ml_chats(uuid), public.ml_messages(uuid, uuid), public.ml_send_message(uuid, uuid, text)
 to anon, authenticated;
