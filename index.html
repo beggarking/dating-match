@@ -24,11 +24,13 @@
   main { display:grid; grid-template-columns:380px 1fr; gap:24px; padding:20px 24px 32px; max-width:1200px; margin:auto; }
   main.single { grid-template-columns:minmax(0, 640px); justify-content:center; }
   @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } nav.tabs { padding:0 16px; } header { padding:12px 16px; } }
+  @media (max-width:600px){ header .sub { display:none; } header h1 { flex:1; } }
   .card { background:var(--card); border:3px solid var(--ink); border-radius:22px; box-shadow:6px 6px 0 var(--ink); padding:20px; margin-bottom:24px; }
   h2 { font-size:21px; margin:0 0 12px; } h3 { font-size:15px; margin:18px 0 8px; font-weight:900; }
   label { display:block; font-size:13px; font-weight:700; margin:10px 0 4px; }
-  input, select { width:100%; padding:9px 10px; border:2px solid var(--ink); border-radius:10px; font:inherit; background:#fff; color:var(--ink); }
-  input:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
+  input, select, textarea { width:100%; padding:9px 10px; border:2px solid var(--ink); border-radius:10px; font:inherit; background:#fff; color:var(--ink); }
+  textarea { resize:vertical; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, [data-post]:focus-visible { outline:3px solid var(--blue); outline-offset:2px; }
   .row { display:flex; gap:10px; } .row > * { flex:1; min-width:0; }
   .chips { display:flex; flex-wrap:wrap; gap:6px; }
   .chips label { margin:0; display:inline-flex; align-items:center; gap:4px; padding:5px 11px; border:2px solid var(--ink); border-radius:999px; font-weight:500; background:#fff; cursor:pointer; }
@@ -79,11 +81,99 @@
   dl.summary { display:grid; grid-template-columns:76px 1fr; gap:6px 8px; margin:8px 0 14px; font-size:13px; }
   dl.summary dt { color:var(--sub); font-weight:700; } dl.summary dd { margin:0; font-weight:500; }
   details.danger summary { cursor:pointer; color:var(--sub); font-size:13px; font-weight:700; }
+  main.narrow { grid-template-columns:minmax(0, 560px); }
+
+  /* 프로필 사진 (사진이 없으면 이름 첫 글자) */
+  .av { display:inline-flex; align-items:center; justify-content:center; flex:none; border-radius:50%; border:3px solid var(--ink); background:#CFE0FF; color:var(--ink); object-fit:cover; overflow:hidden; font-family:"Black Han Sans",sans-serif; line-height:1; }
+  .av.f { background:#FFD0E1; }
+  #meAvatar { padding:0; border:0; background:none; border-radius:50%; box-shadow:3px 3px 0 var(--ink); }
+  .photoField { display:flex; align-items:center; gap:16px; margin:4px 0 6px; }
+  .fileBtn { display:inline-block; margin:0; padding:7px 12px; border:3px solid var(--ink); border-radius:12px; background:#fff; cursor:pointer; }
+
+  /* 내 프로필 카드 */
+  .pcard { padding:0; overflow:hidden; text-align:center; }
+  .pcard .banner { height:120px; border-bottom:3px solid var(--ink); background:repeating-linear-gradient(-45deg, var(--accent) 0 16px, #FF8DB8 16px 32px); }
+  .pcard .photoWrap { position:relative; width:156px; margin:-80px auto 0; }
+  .pcard .photoWrap .av { box-shadow:5px 5px 0 var(--ink); }
+  .pencil { position:absolute; right:-4px; bottom:4px; width:46px; height:46px; padding:0; border-radius:50%; background:var(--yellow); display:flex; align-items:center; justify-content:center; box-shadow:3px 3px 0 var(--ink); }
+  .pcard .body { padding:8px 22px 22px; }
+  .pcard h2, .pick h2 { font-size:30px; margin:14px 0 4px; }
+  .intro { color:var(--sub); font-weight:500; font-size:15px; margin-top:4px; }
+  .sub2 { color:var(--sub); font-weight:700; }
+  .pill { display:inline-block; margin-top:10px; padding:3px 12px; border:2px solid var(--ink); border-radius:999px; background:var(--bg); font-size:12px; font-weight:700; }
+  .rateBox { display:flex; align-items:center; justify-content:center; gap:16px; margin:18px 0 6px; padding:14px; border:3px solid var(--ink); border-radius:16px; background:var(--bg); text-align:left; }
+  .rateBox .num { font-family:"Black Han Sans",sans-serif; font-size:30px; }
+  .bestLine { margin-top:14px; font-size:13px; font-weight:500; }
+
+  /* 별점 */
+  .stars { position:relative; display:inline-block; line-height:1; white-space:nowrap; color:#fff; -webkit-text-stroke:2px var(--ink); }
+  .stars .fill { position:absolute; left:0; top:0; overflow:hidden; color:var(--yellow); }
+  .starPick { display:inline-flex; }
+  .starPick button { background:none; border:0; box-shadow:none; padding:0 2px; font-size:34px; line-height:1; color:#fff; -webkit-text-stroke:2px var(--ink); }
+  .starPick button.on, .starPick:hover button { color:var(--yellow); }
+  .starPick button:hover ~ button { color:#fff; }
+
+  /* 매칭 봇 + 항목별 % 막대 (오늘의 추천 · 내 프로필) */
+  .bot { display:flex; gap:10px; align-items:flex-start; text-align:left; margin:18px 0 6px; }
+  .bot .face { width:46px; height:46px; flex:none; border:3px solid var(--ink); border-radius:14px; background:var(--yellow); display:flex; align-items:center; justify-content:center; }
+  .bot .bubble { flex:1; background:#fff; border:2px solid var(--ink); border-radius:4px 14px 14px 14px; padding:9px 12px; font-size:13px; font-weight:500; }
+  .bot .bubble b.t { display:block; font-weight:900; margin-bottom:2px; }
+  .pctGrid { display:grid; grid-template-columns:1fr 1fr; gap:12px 22px; text-align:left; margin-top:12px; }
+  .pctGrid .top { display:flex; justify-content:space-between; font-weight:700; font-size:13px; }
+  .pctGrid .top b { color:var(--blue); font-weight:900; }
+  .pbar { height:12px; margin-top:4px; border:2px solid var(--ink); border-radius:999px; background:#fff; overflow:hidden; }
+  .pbar i { display:block; height:100%; background:var(--blue); }
+  @media (max-width:420px) { .pctGrid { grid-template-columns:1fr; } }
+
+  /* 오늘의 추천 */
+  .todayHead .sticker { font-size:34px; padding:8px 14px; }
+  .todayList { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .todayList:empty { display:none; }
+  .todayList button { display:inline-flex; align-items:center; gap:6px; padding:3px 12px 3px 3px; border-width:2px; border-radius:999px; background:#fff; color:var(--ink); }
+  .todayList button.on { background:var(--yellow); }
+  .pick { text-align:center; }
+  .pick .photo { aspect-ratio:1 / 1; max-height:340px; margin:0 auto; border:3px solid var(--ink); border-radius:18px; overflow:hidden; background:#CFE0FF; display:flex; align-items:center; justify-content:center; font-family:"Black Han Sans",sans-serif; font-size:130px; }
+  .pick .photo.f { background:#FFD0E1; }
+  .pick .photo img { width:100%; height:100%; object-fit:cover; }
+  .pick .acts { display:flex; gap:10px; margin-top:16px; }
+  .pick .acts button { flex:2; } .pick .acts .pass { flex:1; }
+  .rateRow { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:3px dashed var(--ink); text-align:left; }
+  .person { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:2px solid var(--soft); }
+  .person:last-child { border-bottom:0; }
+
+  /* 인기 랭킹 */
+  .rankList { list-style:none; padding:0; margin:0; }
+  .rankList li { display:flex; align-items:center; gap:12px; margin:0 0 10px; padding:10px 14px; border:3px solid var(--ink); border-radius:16px; background:#fff; }
+  .rankList li.r1 { background:var(--yellow); box-shadow:4px 4px 0 var(--ink); }
+  .rankList li.r2, .rankList li.r3 { background:#FFE3EE; }
+  .rankList .no { width:34px; flex:none; text-align:center; font-family:"Black Han Sans",sans-serif; font-size:26px; }
+  .rankList .who { flex:1; min-width:0; }
+  .rankList .who b { font-size:16px; }
+  .rankList .score { text-align:right; white-space:nowrap; }
+  /* 커뮤니티: 왼쪽 동그란 프로필 + 말풍선 글 */
+  .post { display:flex; align-items:flex-start; gap:14px; margin:0 0 18px; }
+  .whoBtn { padding:0; border:0; background:none; border-radius:50%; flex:none; }
+  .whoBtn .av { box-shadow:3px 3px 0 var(--ink); }
+  .bubble2 { position:relative; flex:1; min-width:0; padding:12px 16px; background:#fff; border:3px solid var(--ink); border-radius:18px; box-shadow:5px 5px 0 var(--ink); }
+  .bubble2::before { content:""; position:absolute; left:-12px; top:18px; width:18px; height:18px; background:#fff; border-left:3px solid var(--ink); border-bottom:3px solid var(--ink); transform:rotate(45deg); }
+  .post [data-post] { cursor:pointer; }
+  .post [data-post]:hover { background:#FFFBEA; } .post [data-post]:hover::before { background:#FFFBEA; }
+  .postHead { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .postHead .name { padding:0; border:0; background:none; color:var(--ink); font-weight:900; font-size:15px; }
+  .pbody { margin:6px 0; font-size:15px; font-weight:500; white-space:pre-wrap; word-break:break-word; }
+  .post .pbody.clamp { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .postFoot { display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700; color:var(--sub); }
+  .comment { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:2px solid var(--soft); }
+  .comment:last-child { border-bottom:0; }
+  .comment .pbody { font-size:14px; margin:2px 0 0; }
+  dialog.card { padding:0; width:min(440px, calc(100% - 32px)); max-height:calc(100% - 32px); overflow:auto; text-align:center; color:var(--ink); }
+  dialog::backdrop { background:rgba(17,17,17,.45); }
   [hidden] { display:none !important; }
 </style>
 </head>
 <body>
 <header>
+  <button type="button" id="meAvatar" hidden aria-label="내 프로필" title="내 프로필"></button>
   <h1><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg></span><span id="appName">교만추</span></h1>
   <span class="sub">누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여주는 소개팅 추천</span>
   <div id="userBox" hidden><span id="userLabel"></span><button class="ghost" type="button" id="logoutBtn">로그아웃</button></div>
@@ -121,10 +211,74 @@
 <!-- ── 로그인 후 ─────────────────────────────────────────────────── -->
 <div id="appView" hidden>
   <nav class="tabs">
-    <button type="button" data-view="match" class="on">추천</button>
-    <button type="button" data-view="profile">내 정보 수정</button>
+    <button type="button" data-view="feed" class="on">커뮤니티</button>
+    <button type="button" data-view="match">점수 매칭</button>
+    <button type="button" data-view="today">오늘의 추천</button>
+    <button type="button" data-view="ranking">인기 랭킹</button>
     <button type="button" data-view="register">정보 등록</button>
   </nav>
+
+  <!-- 커뮤니티 (홈) -->
+  <main class="single narrow" id="feedView" hidden>
+    <section>
+      <div class="card">
+        <h2>커뮤니티 <span class="meta">교통대 학생들의 이야기</span></h2>
+        <textarea id="postBody" maxlength="500" rows="3" placeholder="무슨 이야기를 나눠볼까요? (최대 500자)"></textarea>
+        <div class="row" style="align-items:center; margin-top:8px">
+          <span class="meta" id="postLen">0 / 500</span>
+          <button class="primary" type="button" id="postBtn" style="flex:none">글 올리기</button>
+        </div>
+        <div class="msg" id="postMsg"></div>
+      </div>
+      <div id="feedList"></div>
+    </section>
+  </main>
+
+  <!-- 글 상세: 댓글 -->
+  <main class="single narrow" id="postView" hidden>
+    <section>
+      <button class="link" type="button" data-go="feed" style="margin-bottom:12px">← 커뮤니티</button>
+      <div id="postOut"></div>
+    </section>
+  </main>
+
+  <!-- 내 프로필 (왼쪽 위 동그라미 사진을 누르면) -->
+  <main class="single narrow" id="meView" hidden>
+    <section><div class="card pcard" id="meCard"></div></section>
+  </main>
+
+  <!-- 오늘의 추천: 하루 5번 랜덤 -->
+  <main class="single narrow" id="todayView" hidden>
+    <section>
+      <div class="card todayHead">
+        <div class="winner-head" style="align-items:center">
+          <div style="flex:1">
+            <h2 style="margin:0">오늘의 추천</h2>
+            <div class="meta">하루 5번, 서로 원하는 성별이 맞는 사람 중에서 랜덤으로 한 명씩 골라줘요. 추천받은 사람에게 대화를 요청하고 별점을 줄 수 있어요.</div>
+          </div>
+          <div class="sticker" id="drawLeft"></div>
+        </div>
+        <button class="primary" type="button" id="drawBtn" style="width:100%; margin-top:14px; padding:11px">랜덤 추천 받기</button>
+        <div class="msg" id="drawMsg"></div>
+        <div class="todayList" id="todayList"></div>
+      </div>
+      <div id="pickOut"></div>
+      <div class="card">
+        <h2>나에게 온 대화 요청 <span class="meta" id="recvCount"></span></h2>
+        <div id="recvList"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 인기 랭킹 -->
+  <main class="single" id="rankingView" hidden>
+    <section>
+      <div class="card">
+        <h2>인기 랭킹 TOP 10 <span class="meta">오늘의 추천에서 받은 별점 평균 순</span></h2>
+        <ol class="rankList" id="rankList"></ol>
+      </div>
+    </section>
+  </main>
 
   <!-- 추천 -->
   <main id="matchView">
@@ -154,7 +308,8 @@
   <main class="single" id="profileView" hidden>
     <section>
       <div class="card">
-        <h2>내 정보 수정 <span class="meta" id="profileSid"></span></h2>
+        <button class="link" type="button" data-go="me">← 내 프로필</button>
+        <h2 style="margin-top:8px">내 정보 수정 <span class="meta" id="profileSid"></span></h2>
         <div class="note" id="profileNotice" hidden></div>
         <form id="meForm" onsubmit="return false"></form>
         <div class="row" style="margin-top:14px">
@@ -197,6 +352,9 @@
     </section>
   </main>
 </div>
+
+<!-- 글쓴이 프로필 (커뮤니티 · 랭킹 · 대화 요청에서 사람을 누르면) -->
+<dialog class="card" id="userDlg" aria-label="프로필"></dialog>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -334,7 +492,7 @@ function scoreOne(me, o, W = POINTS) {
   };
   return {
     profile: o, pts, total: +(pts.interest + pts.values + pts.life).toFixed(1),
-    detail: { interestSim, mv, ov, same, similar, diffs, life },
+    detail: { interestSim, valuesSim, mv, ov, same, similar, diffs, life },
   };
 }
 
@@ -381,8 +539,15 @@ const ERRORS = {
   bad_name: "이름은 1~20자로 입력해 주세요.",
   bad_nickname: "닉네임은 한글 · 영문 · 숫자 · _ 2~12자로 입력해 주세요.",
   nickname_taken: "이미 사용 중인 닉네임이에요.",
-  bad_profile: "프로필 정보가 올바르지 않아요.",
+  bad_profile: "프로필 정보가 올바르지 않아요. (사진이 너무 크면 다른 사진을 골라주세요)",
   not_logged_in: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+  daily_limit: "오늘의 추천은 하루 5번까지예요. 내일 다시 받아보세요.",
+  bad_target: "추천할 수 없는 프로필이에요.",
+  not_recommended: "오늘의 추천에서 받은 사람에게만 별점 · 대화 요청을 할 수 있어요.",
+  bad_stars: "별점은 1~5점이에요.",
+  bad_post: "글은 1~500자로 써주세요.",
+  bad_comment: "댓글은 1~300자로 써주세요.",
+  post_not_found: "삭제됐거나 없는 글이에요.",
 };
 
 async function rpc(fn, args = {}) {
@@ -412,14 +577,21 @@ const store = {
   del(k) { try { localStorage.removeItem("matchlab." + k); } catch {} },
 };
 
-let session = null;  // { token, user: { id, student_id, name, profile } }
+let session = null;  // { token, user: { id, student_id, name, nickname, profile } }
 let members = [];    // 서버에서 받은 다른 회원 프로필
+// 오늘의 추천 · 별점 · 대화 요청 (서버 ml_home)
+const EMPTY_HOME = { limit: 5, today: [], given: {}, sent: [], received: [], ratings: {} };
+let home = EMPTY_HOME;
+let currentPick = null; // 오늘의 추천에서 보고 있는 사람 id
+
+const PHOTO_RE = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/;
 
 /** 서버에서 온 프로필은 형식을 한 번 정리해서 쓴다 (빠진 값 · 이상한 값 방어) */
 function cleanProfile(p, extra) {
   const num = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.min(hi, Math.max(lo, Math.round(+v))) : d);
   return {
     ...extra,
+    photo: PHOTO_RE.test(p.photo ?? "") ? p.photo : null,
     gender: p.gender === "여" ? "여" : "남",
     age: num(p.age, 19, 99, 22),
     region: String(p.region ?? ""), dept: String(p.dept ?? ""), intro: String(p.intro ?? ""),
@@ -444,15 +616,22 @@ async function loadMembers() {
   renderPoolCount();
 }
 
+async function loadHome() {
+  home = { ...EMPTY_HOME, ...(await rpc("ml_home", { p_token: session.token })) };
+}
+
+/** 별점 · 오늘의 추천 기록의 id → 프로필 (가상 프로필, 회원, 나) */
+const byId = id => (id === session?.user.id ? myProfile() : VIRTUAL.find(p => p.id === id) ?? members.find(p => p.id === id));
+
 function setSession(s) {
-  session = s;
+  session = s; home = EMPTY_HOME; currentPick = null;
   store.set("token", s.token);
   showApp();
 }
 
 function logout(expired = false) {
   if (session && !expired) rpc("ml_logout", { p_token: session.token }).catch(() => {});
-  session = null; members = []; lastMe = null;
+  session = null; members = []; lastMe = null; home = EMPTY_HOME; currentPick = null;
   store.del("token");
   showAuth(expired ? ERRORS.not_logged_in : "");
 }
@@ -470,7 +649,9 @@ function showAuthTab(name) {
 }
 
 function showAuth(message = "") {
-  $("#appView").hidden = true; $("#userBox").hidden = true; $("#authView").hidden = false;
+  $("#appView").hidden = true; $("#userBox").hidden = true; $("#meAvatar").hidden = true; $("#authView").hidden = false;
+  if ($("#userDlg").open) $("#userDlg").close();
+  feed = null; currentPost = null;
   $("#loginForm").reset();
   showAuthTab("login");
   authMsg(message);
@@ -546,25 +727,57 @@ const signupNick = nickChecker($("#signupForm [name=nick]"), $("#signupNickBtn")
 $("#logoutBtn").onclick = () => logout();
 
 // ═══════════════════════════════════════════════════════════════════
-// 6. 화면: 로그인 후 (추천 · 내 정보 수정 · 정보 등록)
+// 6. 화면: 로그인 후 (점수 매칭 · 오늘의 추천 · 인기 랭킹 · 정보 등록 · 내 프로필 · 내 정보 수정)
 // ═══════════════════════════════════════════════════════════════════
-const VIEWS = { match: "#matchView", profile: "#profileView", register: "#registerView" };
+const VIEWS = {
+  feed: "#feedView", post: "#postView", match: "#matchView", today: "#todayView", ranking: "#rankingView", register: "#registerView",
+  me: "#meView", profile: "#profileView",
+};
+let currentView = null;
 
 function showView(name) {
+  currentView = name;
   document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
   for (const [k, sel] of Object.entries(VIEWS)) $(sel).hidden = k !== name;
-  if (name === "match") renderMySummary();
   if (name === "profile") fillMeForm();
-  if (name === "register") renderRegList();
+  else renderView();
+  if (name === "feed") refreshFeed();
+}
+
+/** 지금 보고 있는 화면을 다시 그린다 (서버에서 회원 · 별점을 새로 받아온 뒤에도 호출) */
+function renderView() {
+  if (currentView === "feed") renderFeed();
+  if (currentView === "post") renderPost();
+  if (currentView === "match") renderMySummary();
+  if (currentView === "today") renderToday();
+  if (currentView === "ranking") renderRanking();
+  if (currentView === "register") renderRegList();
+  if (currentView === "me") renderMe();
 }
 document.querySelectorAll("nav.tabs button").forEach(b => (b.onclick = () => showView(b.dataset.view)));
+$("#meAvatar").onclick = () => showView("me");
+// data-go="화면이름" 버튼: 화면 이동 (data-run 이 있으면 점수 매칭도 바로 실행)
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-go]");
+  if (!b) return;
+  showView(b.dataset.go);
+  if (b.dataset.run !== undefined) startMatch();
+});
+
+function renderHeader() {
+  $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
+  $("#meAvatar").innerHTML = avatarHTML(myProfile() ?? { name: session.user.nickname }, 44);
+}
 
 function showApp() {
-  $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false;
-  $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
+  $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false; $("#meAvatar").hidden = false;
+  renderHeader();
   $("#out").innerHTML = $("#howto").outerHTML;
-  loadMembers().catch(err => console.warn(err));
-  if (session.user.profile) showView("match");
+  Promise.allSettled([loadMembers(), loadHome()]).then(rs => {
+    rs.forEach(r => r.status === "rejected" && console.warn(r.reason));
+    renderView();
+  });
+  if (session.user.profile) showView("feed");
   else {
     showView("profile");
     $("#profileNotice").hidden = false;
@@ -573,11 +786,21 @@ function showApp() {
 }
 
 // ── 프로필 입력 폼 (내 정보 수정 · 정보 등록에서 같이 씀) ──
-function profileFormHTML(withNickCheck) {
-  const nick = withNickCheck
+function profileFormHTML(mine) {
+  const nick = mine
     ? `<div class="nickRow"><input name="name" maxlength="12" required><button class="ghost nickBtn" type="button">중복확인</button></div><div class="nickMsg" role="status"></div>`
     : `<input name="name" maxlength="12" required>`;
-  return `
+  const photo = mine ? `
+    <label>프로필 사진</label>
+    <div class="photoField">
+      <span class="photoPreview"></span>
+      <div>
+        <label class="fileBtn">사진 선택<input type="file" accept="image/*" class="photoInput" hidden></label>
+        <button class="link" type="button" data-photo-del>사진 삭제</button>
+        <div class="meta" style="margin-top:6px">가운데를 정사각형으로 잘라 작게 줄여서 저장해요.</div>
+      </div>
+    </div>` : "";
+  return `${photo}
     <div class="row">
       <div><label>닉네임</label>${nick}</div>
       <div><label>학과</label><input name="dept" maxlength="30" placeholder="예: 컴퓨터공학과" required></div>
@@ -676,6 +899,8 @@ function fillMeForm() {
   form.querySelectorAll(".chips input").forEach(x => (x.checked = false));
   const p = session.user.profile;
   fillForm(form, p ? { ...cleanProfile(p), name: session.user.nickname } : { name: session.user.nickname });
+  mePhoto = p ? cleanProfile(p).photo : null;
+  renderPhotoPreview();
   meNick.reset();
   $("#profileSid").textContent = `학번 ${session.user.student_id} · 실명 ${session.user.name} (다른 학생에게는 닉네임만 보여요)`;
   $("#profileMsg").textContent = "";
@@ -686,9 +911,10 @@ async function saveMyProfile() {
   const p = readForm(form);
   if (!meNick.ensure() || !validate(form, p)) return false;
   const { name, ...profile } = p;
+  if (mePhoto) profile.photo = mePhoto;
   try {
     session.user = await rpc("ml_update_profile", { p_token: session.token, p_nickname: name, p_profile: profile });
-    $("#userLabel").textContent = `${session.user.nickname}님 (${session.user.student_id})`;
+    renderHeader();
     $("#profileNotice").hidden = true;
     $("#profileMsg").className = "msg ok"; $("#profileMsg").textContent = "저장했어요.";
     return true;
@@ -703,6 +929,37 @@ $("#meSaveMatchBtn").onclick = () => withBusy($("#meSaveMatchBtn"), async () => 
   if (await saveMyProfile()) { showView("match"); await startMatch(); }
 });
 const meNick = nickChecker($("#meForm [name=name]"), $("#meForm .nickBtn"), $("#meForm .nickMsg"), () => session?.user.nickname);
+
+// ── 프로필 사진: 가운데를 정사각형으로 잘라 240px JPEG 로 줄인 뒤 프로필에 같이 저장 ──
+let mePhoto = null;
+function renderPhotoPreview() {
+  const f = $("#meForm").elements;
+  $("#meForm .photoPreview").innerHTML = avatarHTML({ photo: mePhoto, name: f.name.value || session?.user.nickname, gender: f.gender.value }, 96);
+}
+function resizePhoto(file, size = 240) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(img.width, img.height), c = document.createElement("canvas");
+      c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => reject(new Error("이미지 파일을 읽을 수 없어요."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("#meForm .photoInput").onchange = async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try { mePhoto = await resizePhoto(file); renderPhotoPreview(); }
+  catch (err) { alert(err.message); }
+};
+$("#meForm [data-photo-del]").onclick = () => { mePhoto = null; renderPhotoPreview(); };
 $("#meSampleBtn").onclick = () => fillForm($("#meForm"), { ...randomSample(), name: $("#meForm").elements.name.value });
 
 $("#withdrawBtn").onclick = () => withBusy($("#withdrawBtn"), async () => {
@@ -839,10 +1096,13 @@ function runMatch(me, { scroll = true } = {}) {
   out.innerHTML = `
     <div class="card winner">
       <div class="winner-head">
+        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap">
+        ${avatarHTML(w.profile, 92)}
         <div>
           <span class="badge">1위 추천!</span>
           <h2>${esc(w.profile.name)} ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
           <div style="font-weight:500">${esc(w.profile.dept)} · ${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
+        </div>
         </div>
         <div class="sticker">${w.total}<small>점 / 100</small></div>
       </div>
@@ -879,6 +1139,339 @@ function filteredCard(filtered) {
     <ul>${filtered.map(f => `<li class="warn">${esc(f.profile.name)} <span class="meta">${esc(f.profile.gender)} · ${f.profile.age}세</span> — ${f.reasons.map(esc).join(", ")}</li>`).join("")}</ul></div>`;
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// 8. 내 프로필 · 오늘의 추천 · 인기 랭킹
+// ═══════════════════════════════════════════════════════════════════
+const PENCIL_SVG = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`;
+const BOT_SVG = `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9.5 17h5"/></svg>`;
+
+/** 동그란 프로필 사진. 사진이 없으면 이름 첫 글자 (여: 분홍, 남: 파랑) */
+function avatarHTML(p, size) {
+  const style = `width:${size}px; height:${size}px; font-size:${Math.round(size * 0.42)}px`;
+  return PHOTO_RE.test(p?.photo ?? "")
+    ? `<img class="av" src="${p.photo}" alt="" style="${style}">`
+    : `<span class="av ${p?.gender === "여" ? "f" : ""}" style="${style}" aria-hidden="true">${esc(String(p?.name ?? "?").slice(0, 1))}</span>`;
+}
+
+/** 5점 만점 별 (평균 4.3 이면 별 4.3개만큼 노랗게) */
+const starsHTML = (avg, size) => `<span class="stars" style="font-size:${size}px" role="img" aria-label="5점 만점에 ${avg.toFixed(1)}점">★★★★★<span class="fill" style="width:${(avg / 5) * 100}%">★★★★★</span></span>`;
+
+const botHTML = (title, html) => `<div class="bot"><span class="face">${BOT_SVG}</span><div class="bubble"><b class="t">${title}</b>${html}</div></div>`;
+
+// 항목별 궁합(%) — 점수 매칭과 같은 계산(scoreOne)에서 항목만 따로 꺼낸다
+const CATS = ["관심사", "가치관", "나이", "지역", "흡연", "음주"];
+function catPct(me, o) {
+  const d = scoreOne(me, o, DEFAULT_POINTS).detail;
+  return [d.interestSim, d.valuesSim, ...d.life.map(l => l.s)].map(x => Math.round(x * 100));
+}
+const pctGridHTML = vals => `<div class="pctGrid">${CATS.map((c, i) => `
+  <div><div class="top"><span>${c}</span><b>${vals[i]}%</b></div><div class="pbar"><i style="width:${vals[i]}%"></i></div></div>`).join("")}</div>`;
+
+// ── 내 프로필 ──
+function renderMe() {
+  const me = myProfile(), nick = session.user.nickname, r = home.ratings[session.user.id];
+  let analysis = `<div class="meta" style="margin-top:16px">내 정보를 입력하면 항목별 궁합이 여기에 나와요.</div>`;
+  if (me) {
+    const others = pool().filter(o => filterReasons(me, o)[0] !== "본인");
+    const passed = others.filter(o => !filterReasons(me, o).length);
+    const group = passed.length ? passed : others; // 걸러지고 남은 사람이 없으면 저장소 전체와 비교
+    if (group.length) {
+      const all = group.map(o => catPct(me, o));
+      const avg = CATS.map((_, i) => Math.round(all.reduce((s, v) => s + v[i], 0) / all.length));
+      const best = recommend(me, pool()).scored[0];
+      analysis = botHTML("교만추 매칭 분석", `<b>${esc(nick)}</b>님을 ${passed.length ? "추천 후보" : "저장소의"} ${group.length}명과 한 명씩 비교한 항목별 평균 궁합이에요.`)
+        + pctGridHTML(avg)
+        + (best ? `<div class="bestLine">가장 잘 맞는 상대는 <b>${esc(best.profile.name)}</b>님 (${best.total}점) · <button class="link" type="button" data-go="match" data-run>이유 보기</button></div>` : "");
+    }
+  }
+  $("#meCard").innerHTML = `
+    <div class="banner"></div>
+    <div class="photoWrap">${avatarHTML(me ?? { name: nick }, 156)}
+      <button class="pencil" type="button" data-go="profile" aria-label="내 정보 수정" title="내 정보 수정">${PENCIL_SVG}</button></div>
+    <div class="body">
+      <h2>${esc(nick)}${me ? `, ${me.age}` : ""}</h2>
+      ${me?.intro ? `<div class="intro">${esc(me.intro)}</div>` : ""}
+      ${me ? `<span class="pill">${esc(me.dept)} · ${esc(me.region)}</span>` : ""}
+      <div class="rateBox">
+        ${starsHTML(r?.avg ?? 0, 30)}
+        <div><span class="num">${r ? r.avg.toFixed(1) : "0.0"}</span> <b>/ 5</b>
+          <div class="meta">${r ? `${r.count}명이 매긴 내 평점` : "아직 받은 별점이 없어요"}</div></div>
+      </div>
+      ${analysis}
+      <button class="primary" type="button" data-go="profile" style="width:100%; margin-top:20px">내 정보 수정</button>
+    </div>`;
+}
+
+// ── 오늘의 추천: 하루 5번, 서로 원하는 성별이 맞는 가상 프로필 · 회원 중 랜덤 ──
+function renderToday() {
+  const me = myProfile(), left = Math.max(0, home.limit - home.today.length);
+  $("#drawLeft").innerHTML = `${left}<small>/ ${home.limit} 남음</small>`;
+  $("#drawBtn").disabled = !left || !me;
+  $("#drawBtn").textContent = !left ? "오늘 추천을 다 받았어요" : home.today.length ? "다음 추천 받기" : "랜덤 추천 받기";
+  const today = home.today.map(byId).filter(Boolean);
+  if (!today.some(p => p.id === currentPick)) currentPick = today.at(-1)?.id ?? null;
+  $("#todayList").innerHTML = today.map(p =>
+    `<button type="button" class="${p.id === currentPick ? "on" : ""}" data-pick="${esc(p.id)}">${avatarHTML(p, 30)}${esc(p.name)}</button>`).join("");
+  const p = currentPick && byId(currentPick);
+  $("#pickOut").innerHTML = !me
+    ? `<div class="card empty">내 정보를 먼저 입력해야 추천을 받을 수 있어요.<br><button class="primary" type="button" data-go="profile" style="margin-top:12px">내 정보 입력하러 가기</button></div>`
+    : p ? pickCardHTML(me, p) : `<div class="card empty">버튼을 눌러 오늘의 첫 추천을 받아보세요!</div>`;
+
+  $("#recvCount").textContent = home.received.length ? `${home.received.length}건` : "";
+  $("#recvList").innerHTML = home.received.length
+    ? home.received.map(x => {
+        const m = members.find(m => m.id === x.id);
+        return `<div class="person"><button class="whoBtn" type="button" data-user="${esc(x.id)}" data-nick="${esc(x.nickname)}" aria-label="${esc(x.nickname)}님 프로필">${avatarHTML(m ?? { name: x.nickname }, 42)}</button><div><b>${esc(x.nickname)}</b>님이 대화를 요청했어요
+          <div class="meta">${m ? `${esc(m.dept)} · ${m.age}세 · ` : ""}${new Date(x.at).toLocaleDateString("ko-KR")}</div></div></div>`;
+      }).join("")
+    : `<div class="meta">아직 받은 대화 요청이 없어요.</div>`;
+}
+
+function pickCardHTML(me, p) {
+  const s = scoreOne(me, p, DEFAULT_POINTS), r = home.ratings[p.id], mine = home.given[p.id] ?? 0, sent = home.sent.includes(p.id);
+  return `<div class="card pick">
+    <div class="photo ${p.gender === "여" ? "f" : ""}">${PHOTO_RE.test(p.photo ?? "") ? `<img src="${p.photo}" alt="${esc(p.name)}님 사진">` : esc(p.name.slice(0, 1))}</div>
+    <h2>${esc(p.name)}, ${p.age}</h2>
+    <div class="sub2">${esc(p.dept)} · ${esc(p.region)} ${SOURCE_TAG[p.source] ?? ""}</div>
+    ${p.intro ? `<div class="intro">${esc(p.intro)}</div>` : ""}
+    <div class="acts">
+      <button class="ghost pass" type="button" data-act="pass">패스</button>
+      <button class="primary" type="button" data-act="chat" ${sent ? "disabled" : ""}>${sent ? "대화 요청 보냄 ✓" : "대화 요청 하기"}</button>
+    </div>
+    ${sent && p.source === "virtual" ? `<div class="meta" style="margin-top:8px">가상 프로필이라 실제로 전달되지는 않아요.</div>` : ""}
+    ${botHTML("교만추 매칭 봇 알림", `<b>${esc(p.name)}</b>님과 <b>${esc(me.name)}</b>님의 매칭 결과예요. 항목별 궁합을 합친 점수는 <b>${s.total}점</b> / 100이에요.`)}
+    ${pctGridHTML(catPct(me, p))}
+    <div class="rateRow">
+      <div><b>별점 주기</b><div class="meta">${r ? `평균 ${r.avg.toFixed(1)}점 · ${r.count}명 평가` : "아직 받은 별점이 없어요"}${mine ? ` · 내가 준 별점 ${mine}점` : ""}</div></div>
+      <div class="starPick" role="group" aria-label="별점 주기">${[1, 2, 3, 4, 5].map(n =>
+        `<button type="button" data-star="${n}" class="${n <= mine ? "on" : ""}" aria-label="${n}점">★</button>`).join("")}</div>
+    </div>
+  </div>`;
+}
+
+async function drawToday() {
+  const me = myProfile();
+  if (!me) return showView("profile");
+  const msg = (t, kind = "err") => { $("#drawMsg").className = "msg " + kind; $("#drawMsg").textContent = t; };
+  msg("");
+  try {
+    await loadMembers().catch(err => console.warn(err));
+    const seen = new Set(home.today);
+    const ok = (pref, g) => pref === "상관없음" || pref === g;
+    const cands = [...VIRTUAL, ...members].filter(o =>
+      o.id !== me.id && !seen.has(o.id) && ok(me.prefer.gender, o.gender) && ok(o.prefer.gender, me.gender));
+    if (!cands.length) return msg("오늘 새로 추천할 수 있는 사람이 없어요.");
+    const o = pick(cands);
+    home = { ...EMPTY_HOME, ...(await rpc("ml_draw", { p_token: session.token, p_target: o.id })) };
+    currentPick = o.id;
+  } catch (err) { msg(err.message); }
+}
+$("#drawBtn").onclick = async () => { await withBusy($("#drawBtn"), drawToday); renderToday(); };
+$("#todayList").onclick = e => {
+  const b = e.target.closest("[data-pick]");
+  if (b) { currentPick = b.dataset.pick; renderToday(); }
+};
+$("#pickOut").onclick = async e => {
+  const b = e.target.closest("button[data-act], button[data-star]");
+  if (!b || !currentPick) return;
+  if (b.dataset.act === "pass") {
+    if (home.today.length < home.limit) return $("#drawBtn").click();
+    $("#drawMsg").className = "msg err"; $("#drawMsg").textContent = "오늘 추천을 다 받았어요. 내일 또 만나요!";
+    return;
+  }
+  const [fn, args] = b.dataset.act === "chat"
+    ? ["ml_chat_request", { p_token: session.token, p_target: currentPick }]
+    : ["ml_rate", { p_token: session.token, p_target: currentPick, p_stars: +b.dataset.star }];
+  b.disabled = true;
+  try { home = { ...EMPTY_HOME, ...(await rpc(fn, args)) }; } catch (err) { alert(err.message); }
+  renderToday();
+};
+
+// ── 인기 랭킹: 별점 평균 순 TOP 10 (같으면 평가 수가 많은 순) ──
+function renderRanking() {
+  const rows = Object.entries(home.ratings).map(([id, r]) => ({ p: byId(id), ...r })).filter(x => x.p)
+    .sort((a, b) => b.avg - a.avg || b.count - a.count || a.p.name.localeCompare(b.p.name, "ko"))
+    .slice(0, 10);
+  $("#rankList").innerHTML = rows.length
+    ? rows.map((x, i) => `<li class="r${i + 1}">
+        <span class="no">${i + 1}</span><button class="whoBtn" type="button" ${userAttrs(x.p)} aria-label="${esc(x.p.name)}님 프로필">${avatarHTML(x.p, 48)}</button>
+        <div class="who"><b>${esc(x.p.name)}</b> ${x.p.id === session.user.id ? '<span class="tag friend">나</span>' : SOURCE_TAG[x.p.source] ?? ""}
+          <div class="meta">${esc(x.p.dept)} · ${x.p.age}세 · ${esc(x.p.region)}</div></div>
+        <div class="score">${starsHTML(x.avg, 18)}<div><b>${x.avg.toFixed(1)}</b> <span class="meta">/ 5 · ${x.count}명</span></div></div>
+      </li>`).join("")
+    : `<li class="empty" style="border:0; display:block">아직 별점이 없어요. 오늘의 추천에서 별점을 매겨보세요!</li>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 9. 커뮤니티 (홈): 글 → 눌러서 댓글, 글쓴이 프로필을 눌러서 대화 요청
+// ═══════════════════════════════════════════════════════════════════
+let feed = null;        // 글 목록 (null = 아직 못 불러옴)
+let currentPost = null; // 보고 있는 글 { id, ..., comments }
+
+function timeAgo(at) {
+  const m = Math.floor((Date.now() - new Date(at)) / 60000);
+  if (m < 1) return "방금";
+  if (m < 60) return `${m}분 전`;
+  if (m < 60 * 24) return `${Math.floor(m / 60)}시간 전`;
+  if (m < 60 * 24 * 7) return `${Math.floor(m / 1440)}일 전`;
+  return new Date(at).toLocaleDateString("ko-KR");
+}
+
+/** 글 · 댓글 쓴 사람: 가상 프로필 · 프로필 있는 회원은 그 프로필, 아니면 닉네임만 */
+const authorOf = (id, nickname) => byId(id) ?? { id, name: nickname ?? "알 수 없음" };
+const userAttrs = a => `data-user="${esc(a.id)}" data-nick="${esc(a.name)}"`;
+const authorTag = a => (a.id === session.user.id ? '<span class="tag friend">나</span>' : SOURCE_TAG[a.source] ?? SOURCE_TAG.member);
+
+async function refreshFeed() {
+  try { feed = await rpc("ml_feed", { p_token: session.token }); } catch (err) { console.warn(err); feed ??= []; }
+  if (currentView === "feed") renderFeed();
+}
+
+function renderFeed() {
+  $("#feedList").innerHTML = !feed
+    ? `<div class="empty">불러오는 중…</div>`
+    : feed.length
+      ? feed.map(p => {
+          const a = authorOf(p.author, p.nickname);
+          return `<div class="post">
+            <button class="whoBtn" type="button" ${userAttrs(a)} aria-label="${esc(a.name)}님 프로필">${avatarHTML(a, 54)}</button>
+            <div class="bubble2" data-post="${p.id}" role="button" tabindex="0">
+              <div class="postHead"><b>${esc(a.name)}</b> ${authorTag(a)} <span class="meta">${timeAgo(p.at)}</span></div>
+              <div class="pbody clamp">${esc(p.body)}</div>
+              <div class="postFoot"><span>댓글 ${p.comments}</span><span>눌러서 댓글 달기 →</span></div>
+            </div>
+          </div>`;
+        }).join("")
+      : `<div class="card empty">아직 글이 없어요. 첫 글을 올려보세요!</div>`;
+}
+
+async function openPost(id) {
+  currentPost = { id, loading: true };
+  showView("post");
+  try { currentPost = await rpc("ml_post", { p_token: session.token, p_id: id }); }
+  catch (err) { currentPost = { id, error: err.message }; }
+  if (currentView === "post") renderPost();
+}
+
+function renderPost() {
+  const p = currentPost;
+  if (!p || p.loading) { $("#postOut").innerHTML = `<div class="empty">불러오는 중…</div>`; return; }
+  if (p.error) { $("#postOut").innerHTML = `<div class="card empty">${esc(p.error)}</div>`; return; }
+  const a = authorOf(p.author, p.nickname);
+  $("#postOut").innerHTML = `
+    <div class="post">
+      <button class="whoBtn" type="button" ${userAttrs(a)} aria-label="${esc(a.name)}님 프로필">${avatarHTML(a, 60)}</button>
+      <div class="bubble2">
+        <div class="postHead"><button class="name" type="button" ${userAttrs(a)}>${esc(a.name)}</button> ${authorTag(a)} <span class="meta">${timeAgo(p.at)}</span></div>
+        <div class="pbody">${esc(p.body)}</div>
+        <div class="postFoot"><span>댓글 ${p.comments.length}</span>
+          ${p.mine ? `<button class="link" type="button" data-del-post="${p.id}">글 삭제</button>` : `<button class="link" type="button" ${userAttrs(a)}>프로필 보고 대화 걸기</button>`}</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>댓글 ${p.comments.length}</h2>
+      ${p.comments.map(c => {
+        const ca = authorOf(c.author, c.nickname);
+        return `<div class="comment">
+          <button class="whoBtn" type="button" ${userAttrs(ca)} aria-label="${esc(ca.name)}님 프로필">${avatarHTML(ca, 38)}</button>
+          <div style="flex:1; min-width:0">
+            <div class="postHead"><button class="name" type="button" ${userAttrs(ca)}>${esc(ca.name)}</button> ${authorTag(ca)} <span class="meta">${timeAgo(c.at)}</span>
+              ${c.mine ? `<button class="link" type="button" data-del-comment="${c.id}" style="margin-left:auto">삭제</button>` : ""}</div>
+            <div class="pbody">${esc(c.body)}</div>
+          </div></div>`;
+      }).join("") || `<div class="meta">첫 댓글을 남겨보세요.</div>`}
+      <div class="row" style="margin-top:12px; align-items:flex-end">
+        <textarea id="commentBody" maxlength="300" rows="2" placeholder="댓글 달기 (최대 300자)"></textarea>
+        <button class="primary" type="button" id="commentBtn" style="flex:none">등록</button>
+      </div>
+      <div class="msg" id="commentMsg"></div>
+    </div>`;
+}
+
+$("#postBody").oninput = () => ($("#postLen").textContent = `${$("#postBody").value.length} / 500`);
+$("#postBtn").onclick = () => withBusy($("#postBtn"), async () => {
+  const body = $("#postBody").value.trim();
+  $("#postMsg").textContent = "";
+  if (!body) { $("#postMsg").className = "msg err"; $("#postMsg").textContent = "내용을 입력해 주세요."; return; }
+  try {
+    feed = await rpc("ml_write_post", { p_token: session.token, p_body: body });
+    $("#postBody").value = ""; $("#postLen").textContent = "0 / 500";
+    renderFeed();
+  } catch (err) { $("#postMsg").className = "msg err"; $("#postMsg").textContent = err.message; }
+});
+
+$("#feedList").onclick = e => {
+  if (e.target.closest("[data-user]")) return; // 프로필 버튼은 아래 공통 처리
+  const b = e.target.closest("[data-post]");
+  if (b) openPost(+b.dataset.post);
+};
+$("#feedList").onkeydown = e => {
+  const b = e.target.closest("[data-post]");
+  if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPost(+b.dataset.post); }
+};
+
+$("#postOut").onclick = async e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  let call = null;
+  if (b.id === "commentBtn") {
+    const body = $("#commentBody").value.trim();
+    if (!body) { $("#commentMsg").className = "msg err"; $("#commentMsg").textContent = "댓글 내용을 입력해 주세요."; return; }
+    call = ["ml_write_comment", { p_token: session.token, p_post: currentPost.id, p_body: body }];
+  } else if (b.dataset.delComment && confirm("댓글을 삭제할까요?")) {
+    call = ["ml_delete_comment", { p_token: session.token, p_id: +b.dataset.delComment }];
+  } else if (b.dataset.delPost && confirm("글을 삭제할까요? 댓글도 같이 지워져요.")) {
+    try { feed = await rpc("ml_delete_post", { p_token: session.token, p_id: +b.dataset.delPost }); showView("feed"); }
+    catch (err) { alert(err.message); }
+    return;
+  }
+  if (!call) return;
+  b.disabled = true;
+  try { currentPost = await rpc(...call); renderPost(); }
+  catch (err) { b.disabled = false; $("#commentMsg").className = "msg err"; $("#commentMsg").textContent = err.message; }
+};
+
+// ── 사람을 누르면 프로필 창: 나와의 항목별 궁합 + 대화 요청 ──
+let dlgUser = null;
+function openUser(id, nickname) {
+  if (id === session.user.id) return showView("me");
+  dlgUser = { id, nickname };
+  renderUserDlg();
+  if (!$("#userDlg").open) $("#userDlg").showModal();
+}
+function renderUserDlg() {
+  const { id, nickname } = dlgUser, p = byId(id), me = myProfile(), sent = home.sent.includes(id);
+  const r = home.ratings[id], name = p?.name ?? nickname;
+  $("#userDlg").innerHTML = `<div style="padding:20px">
+    ${avatarHTML(p ?? { name }, 120)}
+    <h2 style="margin:12px 0 2px">${esc(name)}${p ? `, ${p.age}` : ""} ${p?.source === "virtual" ? SOURCE_TAG.virtual : SOURCE_TAG.member}</h2>
+    ${p?.intro ? `<div class="intro">${esc(p.intro)}</div>` : ""}
+    ${p ? `<span class="pill">${esc(p.dept)} · ${esc(p.region)}</span>` : `<div class="meta" style="margin-top:6px">아직 프로필 정보를 입력하지 않은 학생이에요.</div>`}
+    ${r ? `<div style="margin-top:10px">${starsHTML(r.avg, 20)} <b>${r.avg.toFixed(1)}</b> <span class="meta">/ 5 · ${r.count}명</span></div>` : ""}
+    ${p && me ? botHTML("교만추 매칭 봇 알림", `<b>${esc(name)}</b>님과 <b>${esc(me.name)}</b>님의 항목별 궁합이에요. 합친 점수는 <b>${scoreOne(me, p, DEFAULT_POINTS).total}점</b> / 100이에요.`) + pctGridHTML(catPct(me, p)) : ""}
+    <div class="acts" style="display:flex; gap:10px; margin-top:18px">
+      <button class="ghost" type="button" data-dlg="close" style="flex:1">닫기</button>
+      <button class="primary" type="button" data-dlg="chat" style="flex:2" ${sent ? "disabled" : ""}>${sent ? "대화 요청 보냄 ✓" : "대화 요청 하기"}</button>
+    </div>
+    ${sent && p?.source === "virtual" ? `<div class="meta" style="margin-top:8px">가상 프로필이라 실제로 전달되지는 않아요.</div>` : ""}
+    <div class="msg" id="dlgMsg"></div></div>`;
+}
+$("#userDlg").onclick = async e => {
+  if (e.target === $("#userDlg")) return $("#userDlg").close(); // 바깥(배경) 클릭
+  const b = e.target.closest("[data-dlg]");
+  if (!b) return;
+  if (b.dataset.dlg === "close") return $("#userDlg").close();
+  b.disabled = true;
+  try {
+    home = { ...EMPTY_HOME, ...(await rpc("ml_chat_request", { p_token: session.token, p_target: dlgUser.id })) };
+    renderUserDlg(); renderView();
+  } catch (err) { b.disabled = false; $("#dlgMsg").className = "msg err"; $("#dlgMsg").textContent = err.message; }
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-user]");
+  if (b && !$("#appView").hidden) openUser(b.dataset.user, b.dataset.nick);
+});
+
 // ── 랜덤 예시: 누를 때마다 입력 항목들 중에서 무작위로 골라 새 사람을 만든다 ──
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
@@ -910,7 +1503,7 @@ function randomSample() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 8. 시작: 저장된 로그인 토큰이 있으면 자동 로그인
+// 10. 시작: 저장된 로그인 토큰이 있으면 자동 로그인
 // ═══════════════════════════════════════════════════════════════════
 (async () => {
   const token = store.get("token", null);
