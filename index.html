@@ -3,15 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Match Lab</title>
+<title>교통대 Match Lab</title>
 <style>
-  :root { --bg:#f6f5f2; --card:#fff; --ink:#222; --sub:#777; --line:#e4e2dd; --accent:#e0526b; --good:#2e8b57; --warn:#c77700; }
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#222; --sub:#777; --line:#e4e2dd; --accent:#e0526b; --good:#2e8b57; --warn:#c77700; --blue:#4a7bd0; }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--ink); font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif; font-size:14px; }
-  header { padding:16px 24px; border-bottom:1px solid var(--line); background:var(--card); }
-  header h1 { margin:0; font-size:20px; } header span { color:var(--sub); }
-  main { display:grid; grid-template-columns:380px 1fr; gap:20px; padding:20px 24px; max-width:1200px; margin:auto; }
-  @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } }
+  header { padding:14px 24px; border-bottom:1px solid var(--line); background:var(--card); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:20px; } header .sub { color:var(--sub); flex:1; }
+  #userBox { display:flex; align-items:center; gap:8px; font-size:13px; }
+  nav.tabs { display:flex; gap:6px; max-width:1200px; margin:16px auto 0; padding:0 24px; }
+  nav.tabs button { flex:none; background:#e8e6e1; color:var(--ink); padding:9px 16px; }
+  nav.tabs button.on { background:var(--accent); color:#fff; }
+  main { display:grid; grid-template-columns:380px 1fr; gap:20px; padding:16px 24px 24px; max-width:1200px; margin:auto; }
+  main.single { grid-template-columns:minmax(0, 640px); justify-content:center; }
+  @media (max-width:860px){ main { grid-template-columns:1fr; padding:16px; } nav.tabs { padding:0 16px; } header { padding:12px 16px; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:16px; }
   h2 { font-size:15px; margin:0 0 12px; } h3 { font-size:13px; margin:14px 0 6px; color:var(--sub); }
   label { display:block; font-size:12px; color:var(--sub); margin:8px 0 3px; }
@@ -23,9 +28,12 @@
   .chips label:has(input:checked) { background:#ffe6ea; border-color:var(--accent); }
   .q { display:grid; grid-template-columns:70px 1fr; align-items:center; gap:6px; margin:4px 0; font-size:12px; }
   button { padding:8px 12px; border:0; border-radius:6px; background:var(--ink); color:#fff; font:inherit; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:default; }
   button.ghost { background:none; color:var(--ink); border:1px solid var(--line); }
   button.primary { background:var(--accent); }
-  .tabs { display:flex; gap:6px; margin-bottom:12px; } .tabs button { flex:1; background:#ddd; color:var(--ink); } .tabs button.on { background:var(--accent); color:#fff; }
+  button.link { background:none; color:var(--sub); padding:0; text-decoration:underline; }
+  .authTabs { display:flex; gap:6px; margin-bottom:8px; } .authTabs button { flex:1; background:#e8e6e1; color:var(--ink); } .authTabs button.on { background:var(--accent); color:#fff; }
+  .msg { font-size:13px; margin-top:10px; min-height:18px; } .msg.err { color:#c0392b; } .msg.ok { color:var(--good); }
   table { width:100%; border-collapse:collapse; font-size:13px; }
   th, td { padding:6px 4px; border-bottom:1px solid var(--line); text-align:center; } th { color:var(--sub); font-weight:normal; }
   td:nth-child(2) { text-align:left; } tr.first td { background:#fff4f6; font-weight:600; }
@@ -42,72 +50,136 @@
   .bar { height:8px; background:#eee; border-radius:4px; overflow:hidden; } .bar i { display:block; height:100%; background:var(--accent); }
   ul { margin:4px 0; padding-left:18px; } li { margin:3px 0; }
   li.good::marker { content:"✓ "; color:var(--good); } li.warn::marker { content:"! "; color:var(--warn); }
-  .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:40px 0; }
-  .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); }
-  .tag.friend { background:#ffe6ea; color:var(--accent); }
-  #meCard dl { display:grid; grid-template-columns:70px 1fr; gap:4px 8px; margin:8px 0 12px; font-size:13px; }
-  #meCard dt { color:var(--sub); } #meCard dd { margin:0; }
+  .meta { color:var(--sub); font-size:12px; } .empty { color:var(--sub); text-align:center; padding:32px 0; }
+  .tag { font-size:11px; padding:1px 6px; border-radius:8px; background:#eee; color:var(--sub); white-space:nowrap; }
+  .tag.member { background:#e6efff; color:var(--blue); } .tag.friend { background:#ffe6ea; color:var(--accent); }
+  dl.summary { display:grid; grid-template-columns:70px 1fr; gap:4px 8px; margin:8px 0 12px; font-size:13px; }
+  dl.summary dt { color:var(--sub); } dl.summary dd { margin:0; }
+  details.danger summary { cursor:pointer; color:var(--sub); font-size:12px; }
+  [hidden] { display:none !important; }
 </style>
 </head>
 <body>
-<header><h1>💘 Match Lab</h1> <span>내 정보를 입력하면 누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여줍니다</span></header>
-<main>
-  <section>
-    <div class="card">
-      <div class="tabs">
-        <button id="tabMe" class="on">① 내 정보</button>
-        <button id="tabFriend">② 정보 등록</button>
-      </div>
-      <form id="form" onsubmit="return false">
-        <div class="row">
-          <div><label>이름</label><input name="name" required></div>
-          <div><label>성별</label><select name="gender"><option>남</option><option>여</option></select></div>
-          <div><label>나이</label><input name="age" type="number" min="19" max="99" value="27" required></div>
-        </div>
-        <div class="row">
-          <div><label>지역</label><select name="region"></select></div>
-          <div><label>흡연</label><select name="smoking"><option value="false">비흡연</option><option value="true">흡연</option></select></div>
-          <div><label>음주</label><select name="drinking"><option>안 마심</option><option selected>가끔</option><option>자주</option></select></div>
-        </div>
-        <label>한 줄 소개</label><input name="intro" placeholder="퇴근 후엔 카페에서 책 읽어요">
-        <label>관심사 (여러 개 선택)</label><div class="chips" id="interests"></div>
-        <label>가치관 · 성향</label><div id="questions"></div>
-        <div class="row">
-          <div><label>원하는 상대 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select></div>
-          <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" value="24"><input name="pmax" type="number" value="32"></div></div>
-        </div>
-        <div class="row" style="margin-top:14px" id="meButtons">
-          <button class="ghost" type="button" id="sampleBtn">랜덤 예시</button>
-          <button class="ghost" type="button" id="saveMeBtn">☆ 즐겨찾기 저장</button>
-          <button class="primary" type="button" id="matchBtn" style="flex:1.4">추천 받기</button>
-        </div>
-        <div class="row" style="margin-top:14px; display:none" id="friendButtons">
-          <button class="primary" type="button" id="addBtn">저장소에 정보 등록</button>
-        </div>
-      </form>
-    </div>
-    <div class="card">
-      <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
-      <div class="meta" id="friendList"></div>
-      <div class="meta" style="margin-top:6px">등록한 정보와 즐겨찾기는 이 브라우저에만 저장됩니다.</div>
-    </div>
-  </section>
+<header>
+  <h1>💘 교통대 Match Lab</h1>
+  <span class="sub">누구를 거르고, 무엇에 몇 점을 줬고, 왜 1위인지 보여주는 소개팅 추천</span>
+  <div id="userBox" hidden><span id="userLabel"></span><button class="ghost" type="button" id="logoutBtn">로그아웃</button></div>
+</header>
 
+<!-- ── 로그인 / 회원가입 ─────────────────────────────────────────── -->
+<main class="single" id="authView" hidden>
   <section>
-    <div class="card" id="meCard"></div>
-    <div class="card" id="weightCard">
-      <h2>내 기준 조정 <span class="meta">무엇을 더 중요하게 볼까요?</span></h2>
-      <div id="sliders"></div>
-      <div class="row" style="align-items:center; margin-top:8px">
-        <div class="meta" style="flex:3">움직이면 순위가 바로 다시 계산돼요. 점수표의 ▲▼는 기본 기준(40·40·20) 대비 순위 변화예요.</div>
-        <button class="ghost" type="button" id="resetW">기본값</button>
+    <div class="card">
+      <div class="authTabs">
+        <button type="button" class="on" data-auth="login">로그인</button>
+        <button type="button" data-auth="signup">회원가입</button>
       </div>
+      <form id="loginForm" onsubmit="return false">
+        <label>학번</label><input name="sid" inputmode="numeric" autocomplete="username" required>
+        <label>비밀번호</label><input name="pw" type="password" autocomplete="current-password" required>
+        <button class="primary" type="submit" style="width:100%; margin-top:14px">로그인</button>
+      </form>
+      <form id="signupForm" onsubmit="return false" hidden>
+        <label>학번 (숫자 7~10자리)</label><input name="sid" inputmode="numeric" pattern="[0-9]{7,10}" autocomplete="username" required>
+        <label>이름</label><input name="name" maxlength="20" required>
+        <label>비밀번호 (6자 이상)</label><input name="pw" type="password" minlength="6" autocomplete="new-password" required>
+        <label>비밀번호 확인</label><input name="pw2" type="password" minlength="6" autocomplete="new-password" required>
+        <button class="primary" type="submit" style="width:100%; margin-top:14px">가입하기</button>
+        <div class="meta" style="margin-top:8px">가입은 학번 · 이름 · 비밀번호만으로 끝나요. 학과 · 관심사 같은 정보는 가입 후 <b>내 정보 수정</b>에서 입력해요.</div>
+      </form>
+      <div class="msg" id="authMsg"></div>
     </div>
-    <div id="out"><div class="card" id="howto"></div></div>
   </section>
 </main>
 
+<!-- ── 로그인 후 ─────────────────────────────────────────────────── -->
+<div id="appView" hidden>
+  <nav class="tabs">
+    <button type="button" data-view="match" class="on">추천</button>
+    <button type="button" data-view="profile">내 정보 수정</button>
+    <button type="button" data-view="register">정보 등록</button>
+  </nav>
+
+  <!-- 추천 -->
+  <main id="matchView">
+    <section>
+      <div class="card" id="mySummary"></div>
+      <div class="card">
+        <h2>프로필 저장소 <span class="meta" id="poolCount"></span></h2>
+        <div class="meta">추천은 내 프로필을 저장소의 모든 사람과 한 명씩 비교해서 계산해요.<br>
+          <span class="tag">가상</span> 미리 만든 프로필 · <span class="tag member">회원</span> 가입한 학생 · <span class="tag friend">직접 등록</span> 정보 등록에서 추가한 사람</div>
+      </div>
+    </section>
+    <section>
+      <div class="card" id="weightCard">
+        <h2>내 기준 조정 <span class="meta">무엇을 더 중요하게 볼까요?</span></h2>
+        <div id="sliders"></div>
+        <div class="row" style="align-items:center; margin-top:8px">
+          <div class="meta" style="flex:3">움직이면 순위가 바로 다시 계산돼요. 점수표의 ▲▼는 기본 기준(40·40·20) 대비 순위 변화예요.</div>
+          <button class="ghost" type="button" id="resetW">기본값</button>
+        </div>
+        <button class="primary" type="button" id="matchBtn" style="width:100%; margin-top:12px; padding:11px">추천 받기</button>
+      </div>
+      <div id="out"><div class="card" id="howto"></div></div>
+    </section>
+  </main>
+
+  <!-- 내 정보 수정 -->
+  <main class="single" id="profileView" hidden>
+    <section>
+      <div class="card">
+        <h2>내 정보 수정 <span class="meta" id="profileSid"></span></h2>
+        <div class="note" id="profileNotice" hidden></div>
+        <form id="meForm" onsubmit="return false"></form>
+        <div class="row" style="margin-top:14px">
+          <button class="ghost" type="button" id="meSampleBtn">랜덤 예시</button>
+          <button class="ghost" type="button" id="meSaveBtn">저장</button>
+          <button class="primary" type="button" id="meSaveMatchBtn" style="flex:1.4">저장하고 추천 받기</button>
+        </div>
+        <div class="msg" id="profileMsg"></div>
+      </div>
+      <details class="card danger">
+        <summary>회원 탈퇴</summary>
+        <div class="meta" style="margin:8px 0">계정과 프로필이 삭제되고, 다른 학생의 추천 후보에서도 사라져요.</div>
+        <div class="row">
+          <input type="password" id="withdrawPw" placeholder="비밀번호 확인" autocomplete="current-password">
+          <button class="ghost" type="button" id="withdrawBtn" style="flex:none">탈퇴하기</button>
+        </div>
+        <div class="msg" id="withdrawMsg"></div>
+      </details>
+    </section>
+  </main>
+
+  <!-- 정보 등록 -->
+  <main id="registerView" hidden>
+    <section>
+      <div class="card">
+        <h2>정보 등록 <span class="meta">저장소에 사람을 직접 추가해요</span></h2>
+        <form id="regForm" onsubmit="return false"></form>
+        <div class="row" style="margin-top:14px">
+          <button class="ghost" type="button" id="regSampleBtn">랜덤 예시</button>
+          <button class="primary" type="button" id="regAddBtn" style="flex:1.4">저장소에 정보 등록</button>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="card">
+        <h2>직접 등록한 정보 <span class="meta" id="regCount"></span></h2>
+        <div id="regList" class="meta"></div>
+        <div class="meta" style="margin-top:8px">직접 등록한 정보는 이 브라우저에만 저장돼요.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
 <script>
+// ═══════════════════════════════════════════════════════════════════
+// 0. Supabase 설정 (회원 · 프로필 저장). 테이블과 함수는 supabase-setup.sql 참고.
+//    이 키는 공개용(publishable) 키라 코드에 있어도 괜찮다. 실제 보안은 SQL 함수가 담당한다.
+// ═══════════════════════════════════════════════════════════════════
+const SUPABASE_URL = "https://vykpzywrgwgluldswias.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vjDGzZdpn5w4tcOMgXLnfQ_ILVQk-e0";
+
 // ═══════════════════════════════════════════════════════════════════
 // 1. 임베딩 정의: 관심사 하나하나를 6가지 성향 축 위의 벡터로 표현
 //    축: [문화·예술, 액티브, 사교, 집콕, 커리어, 다정]
@@ -137,7 +209,8 @@ const QUESTIONS = [
   { key: "goal",    label: "만남 목적", low: "가볍게",   high: "결혼 전제" },
 ];
 
-const REGIONS = ["서울", "경기", "인천", "부산", "대구", "대전", "광주", "기타"];
+// 교통대 캠퍼스 지역(충주 · 증평 · 의왕)을 앞에 둔다
+const REGIONS = ["충주", "증평", "의왕", "청주", "서울", "경기", "인천", "부산", "대구", "대전", "광주", "기타"];
 const DRINK = { "안 마심": 0, "가끔": 1, "자주": 2 };
 
 // 점수 배분 (총 100점) — "내 기준 조정" 슬라이더로 바꿀 수 있다
@@ -145,35 +218,35 @@ const DEFAULT_POINTS = { interest: 40, values: 40, life: 20 };
 const POINTS = { ...DEFAULT_POINTS };
 
 // ═══════════════════════════════════════════════════════════════════
-// 2. 프로필 저장소: 가상 프로필 20명 (+ 브라우저에 등록한 정보)
+// 2. 프로필 저장소: 가상 프로필 20명 (+ 가입한 회원 + 정보 등록으로 추가한 사람)
 //    a = 가치관 답 [연애 속도, 연락 빈도, 주말, 성격, 만남 목적]
 // ═══════════════════════════════════════════════════════════════════
-const P = (name, gender, age, region, smoking, drinking, interests, a, pg, pmin, pmax, intro) => ({
-  id: "v-" + name, source: "virtual", name, gender, age, region, smoking, drinking, interests, intro,
+const P = (name, gender, age, region, dept, smoking, drinking, interests, a, pg, pmin, pmax, intro) => ({
+  id: "v-" + name, source: "virtual", name, gender, age, region, dept, smoking, drinking, interests, intro,
   answers: Object.fromEntries(QUESTIONS.map((q, i) => [q.key, a[i]])),
   prefer: { gender: pg, age_min: pmin, age_max: pmax },
 });
 const VIRTUAL = [
-  P("서윤", "여", 26, "서울", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "주말엔 카페에서 책 읽는 시간이 제일 행복해요"),
-  P("하린", "여", 27, "서울", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "페스티벌과 파티를 사랑하는 에너자이저"),
-  P("지우", "여", 25, "경기", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 산이나 캠핑장에 있어요"),
-  P("민서", "여", 29, "서울", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "스타트업 PM, 계획 세우는 걸 좋아해요"),
-  P("예린", "여", 24, "부산", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "고양이 두 마리와 사는 일러스트레이터"),
-  P("수아", "여", 28, "서울", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 개발자, 밤에 활동하는 올빼미형"),
-  P("채원", "여", 31, "서울", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "초등학교 선생님, 주말엔 봉사활동"),
-  P("다은", "여", 26, "서울", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "출판사 편집자, 혼자 영화관 가는 것도 좋아해요"),
-  P("소연", "여", 27, "서울", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "간호사, 쉬는 날엔 영화 리뷰를 써요"),
-  P("가은", "여", 30, "인천", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "마케팅 회사 대표, 일 욕심이 많아요"),
-  P("도윤", "남", 28, "서울", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "회계사, 주말엔 헬스와 맛집 탐방"),
-  P("시우", "남", 27, "경기", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드에서 기타 쳐요"),
-  P("준호", "남", 29, "서울", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "번역가, 고전 영화를 즐겨 봐요"),
-  P("태민", "남", 26, "경기", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "체육 트레이너, 서핑과 클라이밍"),
-  P("현우", "남", 31, "서울", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "IT 팀장, 결혼을 생각하고 만나고 싶어요"),
-  P("민재", "남", 27, "서울", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "카피라이터, 노는 게 제일 좋아"),
-  P("승현", "남", 25, "부산", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "수의테크니션, 강아지랑 살아요"),
-  P("재원", "남", 28, "서울", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "백엔드 개발자, SF 소설 좋아해요"),
-  P("지환", "남", 33, "서울", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "고등학교 국어 선생님"),
-  P("우진", "남", 30, "대구", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "정비소 사장, 캠핑장에서 불멍"),
+  P("서윤", "여", 26, "서울", "영어영문학과", false, "가끔", ["독서", "전시회", "카페", "영화"], [2, 3, 2, 2, 3], "남", 25, 32, "주말엔 카페에서 책 읽는 시간이 제일 행복해요"),
+  P("하린", "여", 27, "서울", "경영학과", false, "자주", ["페스티벌", "술자리", "여행", "공연"], [5, 5, 5, 5, 1], "남", 25, 33, "페스티벌과 파티를 사랑하는 에너자이저"),
+  P("지우", "여", 25, "경기", "스포츠산업학과", false, "가끔", ["캠핑", "등산", "자전거", "요리"], [3, 2, 5, 3, 3], "남", 24, 31, "주말마다 산이나 캠핑장에 있어요"),
+  P("민서", "여", 29, "서울", "경영학과", false, "가끔", ["러닝", "재테크", "자기계발", "와인"], [3, 3, 3, 4, 5], "남", 28, 35, "스타트업 PM, 계획 세우는 걸 좋아해요"),
+  P("예린", "여", 24, "부산", "산업디자인학과", false, "안 마심", ["그림", "반려동물", "보드게임", "베이킹"], [2, 4, 1, 2, 3], "남", 23, 30, "고양이 두 마리와 사는 일러스트레이터"),
+  P("수아", "여", 28, "서울", "컴퓨터공학과", true, "자주", ["게임", "애니메이션", "코딩", "독서"], [3, 1, 1, 2, 2], "상관없음", 24, 34, "게임 개발자, 밤에 활동하는 올빼미형"),
+  P("채원", "여", 31, "서울", "유아교육학과", false, "가끔", ["봉사활동", "요리", "음악감상", "카페"], [2, 4, 3, 3, 5], "남", 31, 38, "초등학교 선생님, 주말엔 봉사활동"),
+  P("다은", "여", 26, "서울", "한국어문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 2, 3], "남", 25, 32, "출판사 편집자, 혼자 영화관 가는 것도 좋아해요"),
+  P("소연", "여", 27, "서울", "간호학과", false, "가끔", ["영화", "독서", "카페", "등산"], [2, 3, 3, 2, 4], "남", 26, 33, "간호사, 쉬는 날엔 영화 리뷰를 써요"),
+  P("가은", "여", 30, "인천", "경영학과", false, "자주", ["골프", "와인", "재테크", "자기계발"], [4, 2, 4, 5, 4], "남", 29, 37, "마케팅 회사 대표, 일 욕심이 많아요"),
+  P("도윤", "남", 28, "서울", "경영학과", false, "가끔", ["헬스", "맛집", "골프"], [3, 3, 4, 3, 4], "여", 24, 30, "회계사, 주말엔 헬스와 맛집 탐방"),
+  P("시우", "남", 27, "경기", "음악학과", false, "자주", ["공연", "음악감상", "여행", "술자리"], [4, 3, 5, 5, 1], "여", 23, 30, "밴드에서 기타 쳐요"),
+  P("준호", "남", 29, "서울", "영어영문학과", false, "가끔", ["독서", "영화", "글쓰기", "카페"], [1, 3, 2, 1, 3], "여", 24, 31, "번역가, 고전 영화를 즐겨 봐요"),
+  P("태민", "남", 26, "경기", "스포츠산업학과", false, "가끔", ["서핑", "헬스", "캠핑", "여행"], [4, 3, 5, 5, 2], "여", 23, 29, "체육 트레이너, 서핑과 클라이밍"),
+  P("현우", "남", 31, "서울", "컴퓨터공학과", false, "가끔", ["러닝", "재테크", "독서", "와인"], [3, 3, 3, 4, 5], "여", 26, 33, "IT 팀장, 결혼을 생각하고 만나고 싶어요"),
+  P("민재", "남", 27, "서울", "미디어디자인학과", false, "자주", ["페스티벌", "공연", "여행", "맛집"], [5, 4, 5, 5, 2], "여", 23, 30, "카피라이터, 노는 게 제일 좋아"),
+  P("승현", "남", 25, "부산", "식품공학과", false, "안 마심", ["반려동물", "베이킹", "보드게임", "그림"], [2, 4, 2, 2, 4], "여", 22, 28, "수의테크니션, 강아지랑 살아요"),
+  P("재원", "남", 28, "서울", "소프트웨어학과", false, "가끔", ["게임", "코딩", "보드게임", "독서"], [3, 2, 1, 2, 3], "상관없음", 24, 32, "백엔드 개발자, SF 소설 좋아해요"),
+  P("지환", "남", 33, "서울", "사회복지학과", false, "가끔", ["봉사활동", "요리", "독서", "음악감상"], [2, 4, 3, 3, 5], "여", 27, 34, "고등학교 국어 선생님"),
+  P("우진", "남", 30, "대구", "자동차공학과", true, "자주", ["캠핑", "자전거", "여행", "술자리"], [3, 2, 5, 3, 2], "여", 25, 33, "정비소 사장, 캠핑장에서 불멍"),
 ];
 
 // ═══════════════════════════════════════════════════════════════════
@@ -262,6 +335,7 @@ function explainWinner(me, w, second) {
     warn.push(`${x.q.label}: 나 ${x.me} vs 상대 ${x.them} (1=${x.q.low}, 5=${x.q.high})`);
   }
   for (const l of d.life) (l.ok ? good : warn).push(`${l.item}: ${l.text}`);
+  if (me.dept && me.dept === w.profile.dept) good.push(`같은 학과(${me.dept})예요 (점수에는 반영하지 않음)`);
   if (second) {
     const keys = { interest: "관심사", values: "가치관", life: "생활 조건" };
     const k = Object.keys(keys).reduce((a, b) => (w.pts[b] - second.pts[b] > w.pts[a] - second.pts[a] ? b : a));
@@ -271,24 +345,335 @@ function explainWinner(me, w, second) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 4. 화면
+// 4. 서버 통신 (Supabase RPC) + 로그인 세션
 // ═══════════════════════════════════════════════════════════════════
+const ERRORS = {
+  already_registered: "이미 가입된 학번이에요. 로그인해 주세요.",
+  invalid_login: "학번 또는 비밀번호가 맞지 않아요.",
+  bad_student_id: "학번은 숫자 7~10자리로 입력해 주세요.",
+  short_password: "비밀번호는 6자 이상이어야 해요.",
+  bad_name: "이름은 1~20자로 입력해 주세요.",
+  bad_profile: "프로필 정보가 올바르지 않아요.",
+  not_logged_in: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+};
+
+async function rpc(fn, args = {}) {
+  const headers = { apikey: SUPABASE_KEY, "Content-Type": "application/json" };
+  if (SUPABASE_KEY.startsWith("eyJ")) headers.Authorization = `Bearer ${SUPABASE_KEY}`; // 기존 anon(JWT) 키
+  let res;
+  try {
+    res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, { method: "POST", headers, body: JSON.stringify(args) });
+  } catch {
+    throw new Error("서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.");
+  }
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) {
+    const code = data?.message;
+    if (code === "not_logged_in") logout(true);
+    throw new Error(ERRORS[code] ?? (res.status === 404 ? "서버 설정(supabase-setup.sql)이 아직 적용되지 않았어요." : code || "요청에 실패했어요."));
+  }
+  return data;
+}
+
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem("matchlab." + k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem("matchlab." + k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem("matchlab." + k); } catch {} },
 };
-const friends = () => store.get("friends", []);
-const pool = () => [...VIRTUAL, ...friends()];
-let mode = "me";
 
-// 폼 구성
-$("[name=region]").innerHTML = REGIONS.map(r => `<option>${r}</option>`).join("");
-$("#interests").innerHTML = Object.keys(INTEREST_VEC).map(it => `<label><input type="checkbox" value="${it}">${it}</label>`).join("");
-$("#questions").innerHTML = QUESTIONS.map(q => `
-  <div class="q"><span>${q.label}</span>
-    <select name="q_${q.key}">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 3 ? "selected" : ""}>${n}${n === 1 ? " " + q.low : n === 5 ? " " + q.high : ""}</option>`).join("")}</select></div>`).join("");
+let session = null;  // { token, user: { id, student_id, name, profile } }
+let members = [];    // 서버에서 받은 다른 회원 프로필
+
+/** 서버에서 온 프로필은 형식을 한 번 정리해서 쓴다 (빠진 값 · 이상한 값 방어) */
+function cleanProfile(p, extra) {
+  const num = (v, lo, hi, d) => (Number.isFinite(+v) ? Math.min(hi, Math.max(lo, Math.round(+v))) : d);
+  return {
+    ...extra,
+    gender: p.gender === "여" ? "여" : "남",
+    age: num(p.age, 19, 99, 22),
+    region: String(p.region ?? ""), dept: String(p.dept ?? ""), intro: String(p.intro ?? ""),
+    smoking: p.smoking === true,
+    drinking: DRINK[p.drinking] !== undefined ? p.drinking : "가끔",
+    interests: (Array.isArray(p.interests) ? p.interests : []).filter(x => x in INTEREST_VEC),
+    answers: Object.fromEntries(QUESTIONS.map(q => [q.key, num(p.answers?.[q.key], 1, 5, 3)])),
+    prefer: {
+      gender: ["남", "여", "상관없음"].includes(p.prefer?.gender) ? p.prefer.gender : "상관없음",
+      age_min: num(p.prefer?.age_min, 19, 99, 19), age_max: num(p.prefer?.age_max, 19, 99, 99),
+    },
+  };
+}
+
+const myProfile = () => (session?.user.profile ? cleanProfile(session.user.profile, { id: session.user.id, name: session.user.name }) : null);
+const registered = () => store.get("friends", []);
+const pool = () => [...VIRTUAL, ...members, ...registered()];
+
+async function loadMembers() {
+  const list = await rpc("ml_list_profiles", { p_token: session.token });
+  members = list.map(m => cleanProfile(m.profile, { id: m.id, name: m.name, source: "member" })).filter(m => m.interests.length);
+  renderPoolCount();
+}
+
+function setSession(s) {
+  session = s;
+  store.set("token", s.token);
+  showApp();
+}
+
+function logout(expired = false) {
+  if (session && !expired) rpc("ml_logout", { p_token: session.token }).catch(() => {});
+  session = null; members = []; lastMe = null;
+  store.del("token");
+  showAuth(expired ? ERRORS.not_logged_in : "");
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// 5. 화면: 로그인 / 회원가입
+// ═══════════════════════════════════════════════════════════════════
+function authMsg(text, kind = "err") { $("#authMsg").className = "msg " + kind; $("#authMsg").textContent = text; }
+
+function showAuthTab(name) {
+  document.querySelectorAll("[data-auth]").forEach(x => x.classList.toggle("on", x.dataset.auth === name));
+  $("#loginForm").hidden = name !== "login";
+  $("#signupForm").hidden = name !== "signup";
+  authMsg("");
+}
+
+function showAuth(message = "") {
+  $("#appView").hidden = true; $("#userBox").hidden = true; $("#authView").hidden = false;
+  $("#loginForm").reset();
+  showAuthTab("login");
+  authMsg(message);
+}
+
+document.querySelectorAll("[data-auth]").forEach(b => (b.onclick = () => showAuthTab(b.dataset.auth)));
+
+async function withBusy(btn, fn) {
+  btn.disabled = true;
+  try { await fn(); } finally { btn.disabled = false; }
+}
+
+$("#loginForm").onsubmit = e => {
+  e.preventDefault();
+  const f = e.target.elements;
+  withBusy(e.submitter ?? e.target.querySelector("button"), async () => {
+    try { setSession(await rpc("ml_login", { p_student_id: f.sid.value.trim(), p_password: f.pw.value })); }
+    catch (err) { authMsg(err.message); }
+  });
+};
+
+$("#signupForm").onsubmit = e => {
+  e.preventDefault();
+  const f = e.target.elements;
+  if (f.pw.value !== f.pw2.value) return authMsg("비밀번호 확인이 일치하지 않아요.");
+  withBusy(e.submitter ?? e.target.querySelector("button"), async () => {
+    try {
+      setSession(await rpc("ml_signup", { p_student_id: f.sid.value.trim(), p_password: f.pw.value, p_name: f.name.value.trim() }));
+      e.target.reset();
+    } catch (err) { authMsg(err.message); }
+  });
+};
+
+$("#logoutBtn").onclick = () => logout();
+
+// ═══════════════════════════════════════════════════════════════════
+// 6. 화면: 로그인 후 (추천 · 내 정보 수정 · 정보 등록)
+// ═══════════════════════════════════════════════════════════════════
+const VIEWS = { match: "#matchView", profile: "#profileView", register: "#registerView" };
+
+function showView(name) {
+  document.querySelectorAll("nav.tabs button").forEach(b => b.classList.toggle("on", b.dataset.view === name));
+  for (const [k, sel] of Object.entries(VIEWS)) $(sel).hidden = k !== name;
+  if (name === "match") renderMySummary();
+  if (name === "profile") fillMeForm();
+  if (name === "register") renderRegList();
+}
+document.querySelectorAll("nav.tabs button").forEach(b => (b.onclick = () => showView(b.dataset.view)));
+
+function showApp() {
+  $("#authView").hidden = true; $("#appView").hidden = false; $("#userBox").hidden = false;
+  $("#userLabel").textContent = `${session.user.name}님 (${session.user.student_id})`;
+  $("#out").innerHTML = $("#howto").outerHTML;
+  loadMembers().catch(err => console.warn(err));
+  if (session.user.profile) showView("match");
+  else {
+    showView("profile");
+    $("#profileNotice").hidden = false;
+    $("#profileNotice").textContent = "가입을 환영해요! 아래 정보를 입력하고 저장하면 추천을 받을 수 있어요.";
+  }
+}
+
+// ── 프로필 입력 폼 (내 정보 수정 · 정보 등록에서 같이 씀) ──
+function profileFormHTML() {
+  return `
+    <div class="row">
+      <div><label>이름</label><input name="name" maxlength="20" required></div>
+      <div><label>학과</label><input name="dept" maxlength="30" placeholder="예: 컴퓨터공학과" required></div>
+    </div>
+    <div class="row">
+      <div><label>성별</label><select name="gender"><option>남</option><option>여</option></select></div>
+      <div><label>나이</label><input name="age" type="number" min="19" max="99" value="22" required></div>
+      <div><label>거주 지역</label><select name="region">${REGIONS.map(r => `<option>${r}</option>`).join("")}</select></div>
+    </div>
+    <div class="row">
+      <div><label>흡연</label><select name="smoking"><option value="false">비흡연</option><option value="true">흡연</option></select></div>
+      <div><label>음주</label><select name="drinking"><option>안 마심</option><option selected>가끔</option><option>자주</option></select></div>
+    </div>
+    <label>한 줄 소개</label><input name="intro" maxlength="60" placeholder="공강엔 도서관 옆 카페에서 책 읽어요">
+    <label>관심사 (여러 개 선택)</label>
+    <div class="chips">${Object.keys(INTEREST_VEC).map(it => `<label><input type="checkbox" value="${it}">${it}</label>`).join("")}</div>
+    <label>가치관 · 성향</label>
+    ${QUESTIONS.map(q => `<div class="q"><span>${q.label}</span>
+      <select name="q_${q.key}">${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 3 ? "selected" : ""}>${n}${n === 1 ? " " + q.low : n === 5 ? " " + q.high : ""}</option>`).join("")}</select></div>`).join("")}
+    <div class="row">
+      <div><label>원하는 상대 성별</label><select name="pgender"><option>여</option><option>남</option><option>상관없음</option></select></div>
+      <div><label>원하는 나이</label><div class="row"><input name="pmin" type="number" min="19" max="99" value="20"><input name="pmax" type="number" min="19" max="99" value="28"></div></div>
+    </div>`;
+}
+$("#meForm").innerHTML = profileFormHTML();
+$("#regForm").innerHTML = profileFormHTML();
+
+function readForm(form) {
+  const f = Object.fromEntries(new FormData(form));
+  return {
+    name: f.name.trim(), dept: f.dept.trim(), gender: f.gender, age: +f.age, region: f.region,
+    smoking: f.smoking === "true", drinking: f.drinking, intro: f.intro.trim(),
+    interests: [...form.querySelectorAll(".chips input:checked")].map(x => x.value),
+    answers: Object.fromEntries(QUESTIONS.map(q => [q.key, +f["q_" + q.key]])),
+    prefer: { gender: f.pgender, age_min: +f.pmin, age_max: +f.pmax },
+  };
+}
+
+function fillForm(form, p) {
+  const f = form.elements;
+  for (const k of ["name", "dept", "gender", "age", "region", "drinking", "intro"]) if (p[k] !== undefined) f[k].value = p[k];
+  f.smoking.value = String(!!p.smoking);
+  form.querySelectorAll(".chips input").forEach(x => (x.checked = (p.interests ?? []).includes(x.value)));
+  QUESTIONS.forEach(q => (f["q_" + q.key].value = p.answers?.[q.key] ?? 3));
+  if (p.prefer) { f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max; }
+}
+
+function validate(form, p) {
+  if (!form.reportValidity()) return false;
+  if (!p.interests.length) { alert("관심사를 하나 이상 골라주세요."); return false; }
+  if (p.prefer.age_min > p.prefer.age_max) { alert("원하는 나이 범위를 확인해 주세요."); return false; }
+  return true;
+}
+
+// ── 추천 화면 ──
+function renderMySummary() {
+  const me = myProfile();
+  if (!me) {
+    $("#mySummary").innerHTML = `<h2>내 프로필</h2>
+      <div class="meta">아직 내 정보가 없어요. 정보를 입력해야 추천을 받을 수 있어요.</div>
+      <button class="primary" type="button" style="margin-top:10px" onclick="showView('profile')">내 정보 입력하러 가기</button>`;
+    return;
+  }
+  const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
+  $("#mySummary").innerHTML = `<h2>내 프로필</h2>
+    <dl class="summary">
+      <dt>이름</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)}</span></dd>
+      <dt>학과</dt><dd>${esc(me.dept)}</dd>
+      ${me.intro ? `<dt>소개</dt><dd>${esc(me.intro)}</dd>` : ""}
+      <dt>관심사</dt><dd>${me.interests.map(esc).join(", ")}</dd>
+      <dt>가치관</dt><dd>${ans}</dd>
+      <dt>생활</dt><dd>${me.smoking ? "흡연" : "비흡연"} · 음주 ${esc(me.drinking)}</dd>
+      <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)} · ${me.prefer.age_min}~${me.prefer.age_max}세</dd>
+    </dl>
+    <button class="ghost" type="button" onclick="showView('profile')">내 정보 수정</button>`;
+}
+
+function renderPoolCount() {
+  $("#poolCount").textContent = `${pool().length}명 (가상 ${VIRTUAL.length} · 회원 ${members.length} · 직접 등록 ${registered().length})`;
+}
+
+async function startMatch() {
+  const me = myProfile();
+  if (!me) { showView("profile"); return; }
+  await withBusy($("#matchBtn"), async () => {
+    try { await loadMembers(); } catch (err) { alert("회원 목록을 불러오지 못해서 가상 프로필과 직접 등록한 정보로만 추천해요.\n" + err.message); }
+    runMatch(me);
+  });
+}
+$("#matchBtn").onclick = startMatch;
+
+// ── 내 정보 수정 화면 ──
+function fillMeForm() {
+  const form = $("#meForm");
+  form.reset();
+  form.querySelectorAll(".chips input").forEach(x => (x.checked = false));
+  const p = session.user.profile;
+  fillForm(form, p ? { ...cleanProfile(p), name: session.user.name } : { name: session.user.name });
+  $("#profileSid").textContent = `학번 ${session.user.student_id}`;
+  $("#profileMsg").textContent = "";
+}
+
+async function saveMyProfile() {
+  const form = $("#meForm");
+  const p = readForm(form);
+  if (!validate(form, p)) return false;
+  const { name, ...profile } = p;
+  try {
+    session.user = await rpc("ml_update_profile", { p_token: session.token, p_name: name, p_profile: profile });
+    $("#userLabel").textContent = `${session.user.name}님 (${session.user.student_id})`;
+    $("#profileNotice").hidden = true;
+    $("#profileMsg").className = "msg ok"; $("#profileMsg").textContent = "저장했어요.";
+    return true;
+  } catch (err) {
+    $("#profileMsg").className = "msg err"; $("#profileMsg").textContent = err.message;
+    return false;
+  }
+}
+$("#meSaveBtn").onclick = () => withBusy($("#meSaveBtn"), saveMyProfile);
+$("#meSaveMatchBtn").onclick = () => withBusy($("#meSaveMatchBtn"), async () => {
+  if (await saveMyProfile()) { showView("match"); await startMatch(); }
+});
+$("#meSampleBtn").onclick = () => fillForm($("#meForm"), { ...randomSample(), name: $("#meForm").elements.name.value });
+
+$("#withdrawBtn").onclick = () => withBusy($("#withdrawBtn"), async () => {
+  const pw = $("#withdrawPw").value;
+  if (!pw) { $("#withdrawMsg").className = "msg err"; $("#withdrawMsg").textContent = "비밀번호를 입력해 주세요."; return; }
+  if (!confirm("정말 탈퇴할까요? 계정과 프로필이 삭제돼요.")) return;
+  try {
+    await rpc("ml_delete_account", { p_token: session.token, p_password: pw });
+    $("#withdrawPw").value = "";
+    session = null; store.del("token");
+    showAuth(""); authMsg("탈퇴가 완료됐어요.", "ok");
+  } catch (err) { $("#withdrawMsg").className = "msg err"; $("#withdrawMsg").textContent = err.message; }
+});
+
+// ── 정보 등록 화면 (저장소에 직접 추가, 이 브라우저에만 저장) ──
+function renderRegList() {
+  const list = registered();
+  $("#regCount").textContent = `${list.length}명`;
+  $("#regList").innerHTML = list.length
+    ? list.map(p => `<div style="padding:4px 0">${esc(p.name)} <span class="meta">${esc(p.gender)} · ${esc(p.age)}세 · ${esc(p.dept)}</span>
+        <button class="link" type="button" data-del="${esc(p.id)}">삭제</button></div>`).join("")
+    : "아직 등록한 정보가 없어요.";
+  renderPoolCount();
+}
+$("#regList").onclick = e => {
+  const id = e.target.dataset.del;
+  if (!id) return;
+  store.set("friends", registered().filter(p => p.id !== id));
+  renderRegList();
+};
+$("#regAddBtn").onclick = () => {
+  const form = $("#regForm"), p = readForm(form);
+  if (!validate(form, p)) return;
+  store.set("friends", [...registered(), { ...p, id: "f-" + Date.now().toString(36), source: "friend" }]);
+  form.reset();
+  form.querySelectorAll(".chips input").forEach(x => (x.checked = false));
+  renderRegList();
+  alert(`${p.name}님의 정보를 저장소에 등록했어요.`);
+};
+$("#regSampleBtn").onclick = () => fillForm($("#regForm"), randomSample());
+
+// ═══════════════════════════════════════════════════════════════════
+// 7. 결과 화면: 점수 계산 방법 · 레이더 차트 · 기준 슬라이더 · 1위 설명 · 점수표
+// ═══════════════════════════════════════════════════════════════════
 function renderHowto() {
   $("#howto").innerHTML = `<h2>점수 계산 방법 (100점)</h2>
   <ul>
@@ -352,105 +737,15 @@ $("#resetW").onclick = () => {
 };
 const isDefaultPoints = () => SLIDERS.every(s => POINTS[s.key] === DEFAULT_POINTS[s.key]);
 
-function readForm() {
-  const f = Object.fromEntries(new FormData($("#form")));
-  return {
-    name: f.name.trim(), gender: f.gender, age: +f.age, region: f.region,
-    smoking: f.smoking === "true", drinking: f.drinking, intro: f.intro.trim(),
-    interests: [...document.querySelectorAll("#interests input:checked")].map(x => x.value),
-    answers: Object.fromEntries(QUESTIONS.map(q => [q.key, +f["q_" + q.key]])),
-    prefer: { gender: f.pgender, age_min: +f.pmin, age_max: +f.pmax },
-  };
-}
-
-function fillForm(p) {
-  const f = $("#form").elements;
-  for (const k of ["name", "gender", "age", "region", "drinking", "intro"]) f[k].value = p[k] ?? "";
-  f.smoking.value = String(!!p.smoking);
-  document.querySelectorAll("#interests input").forEach(x => (x.checked = p.interests.includes(x.value)));
-  QUESTIONS.forEach(q => (f["q_" + q.key].value = p.answers[q.key]));
-  f.pgender.value = p.prefer.gender; f.pmin.value = p.prefer.age_min; f.pmax.value = p.prefer.age_max;
-}
-
-let meDraft = null; // 저장하지 않고 입력 중인 내 정보 (정보 등록 탭에 다녀와도 유지)
-
-function switchTab(m) {
-  if (mode === "me" && m !== "me") meDraft = readForm();
-  mode = m;
-  $("#tabMe").classList.toggle("on", m === "me");
-  $("#tabFriend").classList.toggle("on", m === "friend");
-  $("#meButtons").style.display = m === "me" ? "" : "none";
-  $("#friendButtons").style.display = m === "me" ? "none" : "";
-  $("#form").reset();
-  document.querySelectorAll("#interests input").forEach(x => (x.checked = false));
-  const me = meDraft ?? store.get("me", null);
-  if (m === "me" && me) fillForm(me);
-}
-
-function validate(p) {
-  if (!$("#form").reportValidity()) return false;
-  if (!p.interests.length) { alert("관심사를 하나 이상 골라주세요."); return false; }
-  return true;
-}
-
-function renderPool() {
-  const fs = friends();
-  $("#poolCount").textContent = `${VIRTUAL.length + fs.length}명 (가상 ${VIRTUAL.length} · 등록 ${fs.length})`;
-  $("#friendList").innerHTML = fs.length
-    ? "등록된 정보: " + fs.map(p => `${esc(p.name)} <a href="#" data-del="${esc(p.id)}">삭제</a>`).join(" · ")
-    : "아직 등록한 정보가 없어요.";
-}
-
-/** 즐겨찾기: 자주 쓰는 내 정보를 저장해두는 용도 (추천에는 필요 없음) */
-function saveMe() {
-  const me = { ...readForm(), id: "me" };
-  if (!validate(me)) return;
-  store.set("me", me);
-  renderMe();
-  $("#saveMeBtn").textContent = "★ 저장됨";
-  setTimeout(() => ($("#saveMeBtn").textContent = "☆ 즐겨찾기 저장"), 1500);
-}
-
-function renderMe() {
-  const me = store.get("me", null);
-  if (!me) {
-    $("#meCard").innerHTML = `<h2>내 정보 입력하고 바로 추천받기</h2>
-      <div class="meta">왼쪽에 입력하고 <b>“추천 받기”</b>를 누르면 바로 결과가 나와요. 저장은 필요 없어요.<br>
-      “랜덤 예시”를 누르면 누를 때마다 다른 예시가 채워지고, 자주 쓰는 정보는 “☆ 즐겨찾기 저장”으로 남겨둘 수 있어요.</div>`;
-    return;
-  }
-  const ans = QUESTIONS.map(q => `${q.label} ${me.answers[q.key]}`).join(" · ");
-  $("#meCard").innerHTML = `<h2>★ 즐겨찾기한 내 정보</h2>
-    <dl>
-      <dt>이름</dt><dd>${esc(me.name)} <span class="meta">${esc(me.gender)} · ${me.age}세 · ${esc(me.region)} · ${me.smoking ? "흡연" : "비흡연"} · 음주 ${esc(me.drinking)}</span></dd>
-      ${me.intro ? `<dt>소개</dt><dd>${esc(me.intro)}</dd>` : ""}
-      <dt>관심사</dt><dd>${me.interests.map(esc).join(", ")}</dd>
-      <dt>가치관</dt><dd>${ans}</dd>
-      <dt>원하는 상대</dt><dd>${esc(me.prefer.gender)} · ${me.prefer.age_min}~${me.prefer.age_max}세</dd>
-    </dl>
-    <div class="row">
-      <button class="ghost" type="button" id="loadMeBtn">입력칸에 불러오기</button>
-      <button class="ghost" type="button" id="delMeBtn">삭제</button>
-      <button class="primary" type="button" id="favMatchBtn" style="flex:1.4">이 정보로 추천</button>
-    </div>`;
-  $("#loadMeBtn").onclick = () => { meDraft = null; switchTab("me"); fillForm(me); $("#form").scrollIntoView({ behavior: "smooth" }); };
-  $("#delMeBtn").onclick = () => {
-    if (!confirm("즐겨찾기한 내 정보를 삭제할까요? (입력칸 내용은 그대로 남아요)")) return;
-    try { localStorage.removeItem("matchlab.me"); } catch {}
-    renderMe();
-  };
-  $("#favMatchBtn").onclick = () => runMatch(me);
-}
-
-/** 입력칸의 내용으로 바로 추천 (저장하지 않음) */
-function matchFromForm() {
-  if (mode !== "me") switchTab("me");
-  const me = { ...readForm(), id: "me" };
-  if (validate(me)) runMatch(me);
-}
+const SOURCE_TAG = {
+  virtual: '<span class="tag">가상</span>',
+  member: '<span class="tag member">회원</span>',
+  friend: '<span class="tag friend">직접 등록</span>',
+};
 
 function runMatch(me, { scroll = true } = {}) {
   lastMe = me;
+  renderPoolCount();
   const { filtered, scored } = recommend(me, pool());
   const out = $("#out");
   if (!scored.length) {
@@ -470,8 +765,8 @@ function runMatch(me, { scroll = true } = {}) {
   const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${max ? (v / max) * 100 : 0}%"></i></span><span>${v} / ${max}</span></div>`;
   out.innerHTML = `
     <div class="card winner">
-      <h2>🏆 1위 추천: ${esc(w.profile.name)} <span class="tag ${w.profile.source === "friend" ? "friend" : ""}">${w.profile.source === "friend" ? "등록" : "가상"}</span></h2>
-      <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
+      <h2>🏆 1위 추천: ${esc(w.profile.name)} ${SOURCE_TAG[w.profile.source] ?? ""}</h2>
+      <div class="meta">${esc(w.profile.gender)} · ${w.profile.age}세 · ${esc(w.profile.dept)} · ${esc(w.profile.region)} · 관심사 ${w.profile.interests.map(esc).join(", ")}</div>
       ${w.profile.intro ? `<div class="meta">“${esc(w.profile.intro)}”</div>` : ""}
       <div class="winner-top">
         ${radarSVG(w.detail.mv, w.detail.ov, w.profile.name)}
@@ -492,7 +787,7 @@ function runMatch(me, { scroll = true } = {}) {
       <table>
         <tr><th>순위</th><th>이름</th><th>관심사<br>/${POINTS.interest}</th><th>가치관<br>/${POINTS.values}</th><th>생활<br>/${POINTS.life}</th><th>총점</th>${changed ? "<th>기본<br>대비</th>" : ""}</tr>
         ${scored.map((s, i) => `<tr class="${i === 0 ? "first" : ""}"><td>${i + 1}</td>
-          <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.region)}</span>${s.profile.source === "friend" ? ' <span class="tag friend">등록</span>' : ""}</td>
+          <td>${esc(s.profile.name)} <span class="meta">${s.profile.age} · ${esc(s.profile.dept)}</span> ${s.profile.source === "virtual" ? "" : SOURCE_TAG[s.profile.source]}</td>
           <td>${s.pts.interest}</td><td>${s.pts.values}</td><td>${s.pts.life}</td><td><b>${s.total}</b></td>${changed ? `<td>${rankDelta(s, i)}</td>` : ""}</tr>`).join("")}
       </table>
     </div>
@@ -506,17 +801,6 @@ function filteredCard(filtered) {
     <ul>${filtered.map(f => `<li class="warn">${esc(f.profile.name)} <span class="meta">${esc(f.profile.gender)} · ${f.profile.age}세</span> — ${f.reasons.map(esc).join(", ")}</li>`).join("")}</ul></div>`;
 }
 
-function addFriend() {
-  const p = readForm();
-  if (!validate(p)) return;
-  store.set("friends", [...friends(), { ...p, id: "f-" + Date.now().toString(36), source: "friend" }]);
-  switchTab("friend");
-  renderPool();
-  alert(`${p.name}님의 정보를 저장소에 등록했어요.`);
-}
-
-$("#tabMe").onclick = () => switchTab("me");
-$("#tabFriend").onclick = () => switchTab("friend");
 // ── 랜덤 예시: 누를 때마다 입력 항목들 중에서 무작위로 골라 새 사람을 만든다 ──
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
@@ -525,12 +809,12 @@ const SAMPLE_NAMES = {
   남: ["태윤", "민준", "서준", "도현", "예준", "건우", "주원", "유찬", "은호", "선우"],
   여: ["하나", "지민", "서연", "수빈", "지아", "유나", "나연", "은서", "채은", "보람"],
 };
-const SAMPLE_JOBS = ["개발자", "디자이너", "간호사", "교사", "마케터", "기획자", "회계사", "바리스타", "엔지니어", "작가"];
-const SAMPLE_REGIONS = ["서울", "서울", "서울", "경기", "경기", "인천", "부산", "대구", "대전", "광주"];
+const SAMPLE_DEPTS = ["컴퓨터공학과", "경영학과", "간호학과", "기계공학과", "산업디자인학과", "영어영문학과", "유아교육학과", "전자공학과", "철도운전시스템공학과", "건축학과"];
+const SAMPLE_REGIONS = ["충주", "충주", "충주", "증평", "의왕", "청주", "서울", "경기", "대전"];
 
 function randomSample() {
   const gender = pick(["남", "여"]);
-  const age = randInt(23, 34);
+  const age = randInt(20, 27);
   // 관심사: 주된 성향 축 하나를 정하고 그 축이 가장 큰 관심사 2~3개 + 아무 관심사 1~2개
   const axis = randInt(0, AXES.length - 1);
   const all = Object.keys(INTEREST_VEC);
@@ -538,28 +822,24 @@ function randomSample() {
   const extra = shuffle(all.filter(it => !main.includes(it))).slice(0, randInt(1, 2));
   const interests = shuffle([...main, ...extra]);
   return {
-    name: pick(SAMPLE_NAMES[gender]), gender, age,
+    name: pick(SAMPLE_NAMES[gender]), dept: pick(SAMPLE_DEPTS), gender, age,
     region: pick(SAMPLE_REGIONS), smoking: Math.random() < 0.15, drinking: pick(["안 마심", "가끔", "가끔", "자주"]),
-    intro: `${pick(SAMPLE_JOBS)}로 일해요. 요즘 빠져 있는 건 ${interests[0]}, ${interests[1]}`,
+    intro: `요즘 빠져 있는 건 ${interests[0]}, ${interests[1]}`,
     interests,
     answers: Object.fromEntries(QUESTIONS.map(q => [q.key, randInt(1, 5)])),
     prefer: { gender: gender === "남" ? "여" : "남", age_min: Math.max(19, age - 4), age_max: age + 4 },
   };
 }
-$("#sampleBtn").onclick = () => fillForm(randomSample());
-$("#saveMeBtn").onclick = saveMe;
-$("#matchBtn").onclick = matchFromForm;
-$("#addBtn").onclick = addFriend;
-$("#friendList").onclick = e => {
-  const id = e.target.dataset.del;
-  if (!id) return;
-  e.preventDefault();
-  store.set("friends", friends().filter(p => p.id !== id));
-  renderPool();
-};
-switchTab("me");
-renderMe();
-renderPool();
+
+// ═══════════════════════════════════════════════════════════════════
+// 8. 시작: 저장된 로그인 토큰이 있으면 자동 로그인
+// ═══════════════════════════════════════════════════════════════════
+(async () => {
+  const token = store.get("token", null);
+  if (!token) return showAuth();
+  try { setSession({ token, user: await rpc("ml_me", { p_token: token }) }); }
+  catch (err) { store.del("token"); showAuth(err.message === ERRORS.not_logged_in ? "" : err.message); }
+})();
 </script>
 </body>
 </html>
