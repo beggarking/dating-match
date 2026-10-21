@@ -193,6 +193,14 @@
   .m.mine { align-self:flex-end; flex-direction:row-reverse; }
   .m.mine .b { border-radius:14px 4px 14px 14px; background:var(--accent); }
   .m .meta { font-size:11px; white-space:nowrap; }
+  /* AI 설명 (1위 카드 아래) */
+  .aiBox { margin-top:20px; padding:16px; border:3px dashed var(--ink); border-radius:18px; background:#F3F0FF; }
+  .aiText { margin-top:12px; padding:14px 16px; border:2px solid var(--ink); border-radius:14px; background:#fff; font-size:15px; font-weight:500; line-height:1.6; white-space:pre-wrap; }
+  .aiText.typing::after { content:"▍"; animation:blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .aiProg { margin-top:12px; } .aiProg .pbar i { background:var(--accent); transition:width .2s; }
+  .aiBox details { margin-top:10px; font-size:13px; } .aiBox summary { cursor:pointer; font-weight:700; }
+  .aiBox ol { margin:6px 0; padding-left:20px; }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -1003,6 +1011,8 @@ function renderHowto() {
     <li><b>관심사 ${POINTS.interest}점</b> — 관심사를 6가지 성향 축(${AXES.join(", ")}) 벡터로 임베딩해 코사인 유사도 계산</li>
     <li><b>가치관 ${POINTS.values}점</b> — 5개 질문 답(1~5)의 차이가 작을수록 높음</li>
     <li><b>생활 조건 ${POINTS.life}점</b> — 나이차 · 지역 · 흡연 · 음주</li>
+    <li><b>AI 설명</b> — 점수는 바꾸지 않아요. 위 계산 결과를 문장으로 정리해서 브라우저 안의 로컬 LLM에게 주면, LLM이 왜 1위인지 설명해요
+      (소개글 · 관심사 비교에는 AI 임베딩 모델을 써요)</li>
   </ul>`;
 }
 renderHowto();
@@ -1036,6 +1046,7 @@ const SLIDERS = [
   { key: "life", label: "생활 조건" },
 ];
 let lastMe = null; // 마지막으로 추천받은 내 정보 (슬라이더를 움직이면 이걸로 다시 계산)
+let lastScored = []; // 마지막 점수표 (AI 설명이 근거로 씀)
 
 $("#sliders").innerHTML = SLIDERS.map(s => `
   <div class="slider"><span>${s.label}</span>
@@ -1083,6 +1094,7 @@ function runMatch(me, { scroll = true } = {}) {
   };
 
   const w = scored[0], why = explainWinner(me, w, scored[1]);
+  lastScored = scored;
   const bar = (label, v, max) => `<div><span>${label}</span><span class="bar"><i style="width:${max ? (v / max) * 100 : 0}%"></i></span><span>${v} / ${max}</span></div>`;
   out.innerHTML = `
     <div class="card winner">
@@ -1111,6 +1123,15 @@ function runMatch(me, { scroll = true } = {}) {
       <h3>왜 1위인가요?</h3>
       <ul class="reasons">${why.good.map(x => `<li class="good">${esc(x)}</li>`).join("")}</ul>
       ${why.warn.length ? `<h3>참고할 차이점</h3><ul class="reasons">${why.warn.map(x => `<li class="warn">${esc(x)}</li>`).join("")}</ul>` : ""}
+      <div class="aiBox">
+        <div class="bot" style="margin:0">
+          <span class="face">${BOT_SVG}</span>
+          <div class="bubble"><b class="t">AI 설명 (로컬 LLM)</b>위 점수 근거를 이 브라우저 안에서 도는 작은 LLM이 읽고, 왜 1위인지 문장으로 설명해요.
+            서버로 아무것도 보내지 않아요. 처음 한 번만 모델(약 600MB)을 받고, 다음부터는 저장된 모델을 써요.</div>
+        </div>
+        <button class="primary" type="button" id="aiBtn" style="width:100%; margin-top:12px">AI에게 1위 이유 듣기</button>
+        <div id="aiOut"></div>
+      </div>
     </div>
     <div class="card">
       <h2>전체 점수표 (${scored.length}명)</h2>
@@ -1130,6 +1151,136 @@ function filteredCard(filtered) {
   return `<div class="card"><h2>걸러진 사람 (${filtered.length}명)</h2>
     <ul>${filtered.map(f => `<li class="warn">${esc(f.profile.name)} <span class="meta">${esc(f.profile.gender)} · ${f.profile.age}세</span> — ${f.reasons.map(esc).join(", ")}</li>`).join("")}</ul></div>`;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 7-2. AI 설명: 브라우저 안에서 도는 임베딩 모델 + 로컬 LLM (transformers.js)
+//   - 점수 · 순위는 바꾸지 않는다. 위 점수 로직의 결과를 "근거 문장"으로 만들어 LLM 에게 주고,
+//     LLM 은 그 문장들을 이어서 왜 1위인지 설명만 한다 (작은 모델이라 계산 · 추론은 맡기지 않음)
+//   - 임베딩 모델(e5-small)로 나와 상위 후보들의 "소개글 + 관심사" 의미 유사도를 계산해 근거에 넣는다
+//   - LLM 문장이 근거와 어긋나면(없는 숫자 · 1위 이름 누락 · 외국 문자) 한 번 다시 쓰고, 그래도 틀리면 근거 문장을 그대로 보여준다
+// ═══════════════════════════════════════════════════════════════════
+const AI = {
+  lib: "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0",
+  embedModel: "Xenova/multilingual-e5-small",
+  llmModel: "onnx-community/Qwen3.5-0.8B-Text-ONNX",
+  system: "너는 소개팅 앱의 추천 설명 도우미야. 사용자가 주는 문장들을 자연스럽게 이어서 왜 1위인지 2~3문장으로 다듬어. "
+        + "문장에 없는 내용은 추가하지 말고, 이름과 숫자는 그대로 써. '~일 거예요', '~로 보입니다' 같은 추측하는 말투 없이 단정해서, 한국어 존댓말로만 써.",
+};
+let aiModels = null;              // 모델은 처음 누를 때 한 번만 받는다
+let aiProgress = () => {};
+
+function loadAI() {
+  aiModels ??= (async () => {
+    const T = await import(AI.lib);
+    const gpu = navigator.gpu ? await navigator.gpu.requestAdapter().catch(() => null) : null;
+    const device = gpu ? "webgpu" : "wasm";
+    const files = {};
+    const progress_callback = p => {
+      if (p.status !== "progress" || !p.total) return;
+      files[p.name + "/" + p.file] = [p.loaded, p.total];
+      const v = Object.values(files);
+      aiProgress(v.reduce((s, x) => s + x[0], 0), v.reduce((s, x) => s + x[1], 0));
+    };
+    const embed = await T.pipeline("feature-extraction", AI.embedModel, { dtype: "q8", device: "wasm", progress_callback });
+    const tok = await T.AutoTokenizer.from_pretrained(AI.llmModel, { progress_callback });
+    const llm = await T.AutoModelForCausalLM.from_pretrained(AI.llmModel, { dtype: gpu ? "q4f16" : "q4", device, progress_callback });
+    return { T, embed, tok, llm, device };
+  })();
+  aiModels.catch(() => (aiModels = null)); // 실패하면 다음에 다시 시도
+  return aiModels;
+}
+
+// 받침 있으면 a, 없으면 b (예: 관심사 → "예요", 가치관 → "이에요")
+const josa = (word, a, b) => { const c = word.charCodeAt(word.length - 1) - 0xac00; return c >= 0 && c < 11172 && c % 28 ? a : b; };
+const profileText = p => `query: ${p.intro || ""} 관심사: ${p.interests.join(", ")}`;
+
+/** 상위 후보(최대 5명)와 나의 "소개글 + 관심사" 임베딩 코사인 유사도 */
+async function embedSims(ai, me, top) {
+  const out = await ai.embed([me, ...top.map(s => s.profile)].map(profileText), { pooling: "mean", normalize: true });
+  const v = out.tolist();
+  return top.map((_, i) => v[i + 1].reduce((sum, x, k) => sum + x * v[0][k], 0));
+}
+
+/** 점수 로직의 결과 → LLM 에게 줄 근거 문장 (부정문 없이, 이미 계산된 결론만) */
+function aiFacts(me, scored, sims) {
+  const w = scored[0], s2 = scored[1], d = w.detail, n = w.profile.name, facts = [`${n}님이 ${w.total}점으로 1위예요.`];
+  if (s2) {
+    facts.push(`2위 ${s2.profile.name}님보다 ${(w.total - s2.total).toFixed(1)}점 높아요.`);
+    const keys = { interest: "관심사", values: "가치관", life: "생활 조건" };
+    const k = Object.keys(keys).reduce((a, b) => (w.pts[b] - s2.pts[b] > w.pts[a] - s2.pts[a] ? b : a));
+    if (w.pts[k] > s2.pts[k]) facts.push(`2위와 비교해 가장 크게 앞선 항목은 ${keys[k]}${josa(keys[k], "이에요", "예요")}.`);
+  }
+  if (d.same.length) facts.push(`회원님과 ${n}님은 둘 다 ${d.same.join(", ")}${josa(d.same.at(-1), "을", "를")} 좋아해요.`);
+  else if (d.similar.length) facts.push(`회원님과 ${n}님은 관심사의 성향이 비슷해요 (${d.similar.join(", ")}).`);
+  const sameAns = d.diffs.filter(x => x.d === 0).map(x => x.q.label);
+  if (sameAns.length) facts.push(`${sameAns.join(", ")}에 대한 답이 같아요.`);
+  if (sims.length > 1 && sims[0] === Math.max(...sims)) facts.push(`AI 임베딩으로 비교하면, 상위 후보 중 ${n}님의 소개글과 관심사가 회원님과 가장 비슷해요.`);
+  return facts;
+}
+
+/** LLM 문장 검사: 근거에 없는 숫자 · 1위 이름 누락 · 2위가 주어가 된 문장 · 외국 문자 · 길이 */
+function aiCheck(text, facts, w) {
+  const src = facts.join(" ");
+  if ((text.match(/\d+(?:\.\d+)?/g) ?? []).some(n => !src.includes(n))) return "근거에 없는 숫자";
+  if (!text.includes(w.profile.name)) return "1위 이름 누락";
+  if (/2위(는|가)\s/.test(text)) return "2위가 주어인 문장";
+  if (/[一-鿿぀-ヿ]/.test(text) || (text.match(/[A-Za-z]+/g) ?? []).some(x => !src.includes(x))) return "외국 문자"; // 영문 닉네임은 허용
+  if (text.length < 20 || text.length > 400) return "길이";
+  return null;
+}
+
+async function runAI() {
+  const me = lastMe, scored = lastScored, w = scored[0], btn = $("#aiBtn"), out = $("#aiOut");
+  if (!w) return;
+  btn.disabled = true;
+  const started = Date.now();
+  out.innerHTML = `<div class="aiProg"><div class="meta" id="aiStatus">AI 모델 준비 중…</div><div class="pbar"><i style="width:0%"></i></div></div>`;
+  aiProgress = (loaded, total) => {
+    const st = out.querySelector("#aiStatus"), bar = out.querySelector(".aiProg .pbar i");
+    if (!st) return;
+    st.textContent = `AI 모델 받는 중 ${Math.round((loaded / total) * 100)}% (${Math.round(loaded / 1e6)} / ${Math.round(total / 1e6)}MB) — 처음 한 번만 받아요`;
+    bar.style.width = `${(loaded / total) * 100}%`;
+  };
+  try {
+    const ai = await loadAI();
+    out.querySelector("#aiStatus").textContent = "임베딩으로 소개글 · 관심사 비교 중…";
+    out.querySelector(".aiProg .pbar i").style.width = "100%";
+    const top = scored.slice(0, 5), sims = await embedSims(ai, me, top);
+    const facts = aiFacts(me, scored, sims);
+    out.innerHTML = `<div class="aiText typing"></div><div class="meta" id="aiStatus" style="margin-top:6px">로컬 LLM이 설명을 쓰는 중…</div>`;
+    const box = out.querySelector(".aiText");
+    const prompt = "다음 문장들을 자연스럽게 이어 주세요.\n" + facts.map((x, i) => `${i + 1}. ${x}`).join("\n");
+    const inputs = ai.tok.apply_chat_template([{ role: "system", content: AI.system }, { role: "user", content: prompt }],
+      { add_generation_prompt: true, return_dict: true, enable_thinking: false });
+    let text = "", problem = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      text = "";
+      box.textContent = "";
+      const streamer = new ai.T.TextStreamer(ai.tok, { skip_prompt: true, skip_special_tokens: true, callback_function: t => { text += t; box.textContent = text; } });
+      await ai.llm.generate({ ...inputs, max_new_tokens: 160, do_sample: attempt > 0, temperature: 0.3, top_p: 0.9, repetition_penalty: 1.1, streamer });
+      text = text.trim();
+      if (!(problem = aiCheck(text, facts, w))) break;
+    }
+    box.classList.remove("typing");
+    if (problem) box.textContent = facts.join(" ");
+    out.querySelector("#aiStatus").remove();
+    out.insertAdjacentHTML("beforeend", `
+      ${problem ? `<div class="meta" style="margin-top:6px">AI 문장이 근거와 맞지 않아서(${problem}) 근거 문장을 그대로 보여줘요.</div>` : ""}
+      <details>
+        <summary>AI가 읽은 근거 보기 (점수 로직 결과 + 임베딩)</summary>
+        <ol>${facts.map(f => `<li>${esc(f)}</li>`).join("")}</ol>
+        <div>임베딩 유사도 (소개글 + 관심사, e5-small): ${top.map((s, i) => `${esc(s.profile.name)} ${sims[i].toFixed(3)}`).join(" · ")}</div>
+        <div class="meta" style="margin-top:4px">LLM: Qwen3.5 0.8B (${ai.device === "webgpu" ? "WebGPU" : "CPU"}) · ${((Date.now() - started) / 1000).toFixed(0)}초 · 이 브라우저 안에서만 실행</div>
+      </details>`);
+  } catch (err) {
+    console.warn(err);
+    out.innerHTML = `<div class="msg err">AI 모델을 불러오지 못했어요. 최신 Chrome / Edge 에서 다시 시도해 주세요. 위의 "왜 1위인가요?"가 같은 근거예요.<br><span class="meta">${esc(err.message ?? err)}</span></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "AI 설명 다시 듣기";
+  }
+}
+$("#out").addEventListener("click", e => { if (e.target.closest("#aiBtn")) runAI(); });
 
 // ═══════════════════════════════════════════════════════════════════
 // 8. 내 프로필 · 오늘의 추천 · 인기 랭킹
