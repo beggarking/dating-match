@@ -1,3 +1,8 @@
 .venv/
 __pycache__/
 data/me.json
+# AI 설명 서버: 비밀키 · 실행 파일 · 로그는 올리지 않는다
+ai-server/secret.txt
+ai-server/cloudflared.exe
+ai-server/*.log
+ai-server/__pycache__/

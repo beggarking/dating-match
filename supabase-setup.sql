@@ -537,3 +537,35 @@ grant execute on function
   public.ml_delete_post(uuid, bigint), public.ml_delete_comment(uuid, bigint),
   public.ml_respond_request(uuid, uuid, boolean), public.ml_chats(uuid), public.ml_messages(uuid, uuid), public.ml_send_message(uuid, uuid, text)
 to anon, authenticated;
+
+-- 6) AI 설명 서버 주소 -------------------------------------------------------------
+-- AI 설명용 로컬 LLM 서버(Ollama)를 켜면, 그 PC 가 Cloudflare 터널 주소를 여기에 등록하고 사이트가 읽어 간다.
+-- 주소는 비밀키를 아는 서버만 바꿀 수 있다 (여기에는 비밀키의 bcrypt 해시만 저장).
+create table if not exists public.ml_ai_server (
+  id          int primary key default 1 check (id = 1),
+  url         text,
+  secret_hash text not null,
+  updated_at  timestamptz not null default now()
+);
+insert into public.ml_ai_server (id, secret_hash) values (1, '$2a$10$gwqHYJKidMNgVLRXmOgdGeIVJ2H/htNxQIuHzxzp3XiCKAEY.Hhay')
+on conflict (id) do update set secret_hash = excluded.secret_hash;
+alter table public.ml_ai_server enable row level security;
+revoke all on public.ml_ai_server from anon, authenticated;
+
+create or replace function public.ml_set_ai_url(p_secret text, p_url text)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not exists (select 1 from ml_ai_server where id = 1 and secret_hash = crypt(p_secret, secret_hash)) then
+    raise exception 'forbidden';
+  end if;
+  if p_url is not null and p_url !~ '^https://[a-z0-9-]+\.trycloudflare\.com$' then raise exception 'bad_url'; end if;
+  update ml_ai_server set url = p_url, updated_at = now() where id = 1;
+end $$;
+
+create or replace function public.ml_ai_url()
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object('url', url, 'updated_at', updated_at) from ml_ai_server where id = 1;
+$$;
+
+revoke all on function public.ml_set_ai_url(text, text), public.ml_ai_url() from public, anon, authenticated;
+grant execute on function public.ml_set_ai_url(text, text), public.ml_ai_url() to anon, authenticated;

@@ -1011,7 +1011,7 @@ function renderHowto() {
     <li><b>관심사 ${POINTS.interest}점</b> — 관심사를 6가지 성향 축(${AXES.join(", ")}) 벡터로 임베딩해 코사인 유사도 계산</li>
     <li><b>가치관 ${POINTS.values}점</b> — 5개 질문 답(1~5)의 차이가 작을수록 높음</li>
     <li><b>생활 조건 ${POINTS.life}점</b> — 나이차 · 지역 · 흡연 · 음주</li>
-    <li><b>AI 설명</b> — 점수는 바꾸지 않아요. 위 계산 결과를 문장으로 정리해서 브라우저 안의 로컬 LLM에게 주면, LLM이 왜 1위인지 설명해요
+    <li><b>AI 설명</b> — 점수는 바꾸지 않아요. 위 계산 결과를 문장으로 정리해서 직접 띄운 로컬 LLM 서버(Ollama · EXAONE)에 주면, LLM이 왜 1위인지 설명해요
       (소개글 · 관심사 비교에는 AI 임베딩 모델을 써요)</li>
   </ul>`;
 }
@@ -1126,8 +1126,8 @@ function runMatch(me, { scroll = true } = {}) {
       <div class="aiBox">
         <div class="bot" style="margin:0">
           <span class="face">${BOT_SVG}</span>
-          <div class="bubble"><b class="t">AI 설명 (로컬 LLM)</b>위 점수 근거를 이 브라우저 안에서 도는 작은 LLM이 읽고, 왜 1위인지 문장으로 설명해요.
-            서버로 아무것도 보내지 않아요. 처음 한 번만 모델(약 600MB)을 받고, 다음부터는 저장된 모델을 써요.</div>
+          <div class="bubble"><b class="t">AI 설명 (로컬 LLM)</b>위 점수 근거를 직접 띄운 로컬 LLM 서버(Ollama · EXAONE)가 읽고, 왜 1위인지 문장으로 설명해요.
+            점수와 순위는 바꾸지 않아요. 따로 받을 것 없이 버튼만 누르면 돼요.</div>
         </div>
         <button class="primary" type="button" id="aiBtn" style="width:100%; margin-top:12px">AI에게 1위 이유 듣기</button>
         <div id="aiOut"></div>
@@ -1153,22 +1153,58 @@ function filteredCard(filtered) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 7-2. AI 설명: 브라우저 안에서 도는 임베딩 모델 + 로컬 LLM (transformers.js)
+// 7-2. AI 설명: 임베딩 모델 + 로컬 LLM 으로 "왜 1위인지" 설명
 //   - 점수 · 순위는 바꾸지 않는다. 위 점수 로직의 결과를 "근거 문장"으로 만들어 LLM 에게 주고,
-//     LLM 은 그 문장들을 이어서 왜 1위인지 설명만 한다 (작은 모델이라 계산 · 추론은 맡기지 않음)
-//   - 임베딩 모델(e5-small)로 나와 상위 후보들의 "소개글 + 관심사" 의미 유사도를 계산해 근거에 넣는다
+//     LLM 은 그 문장들을 이어서 왜 1위인지 설명만 한다 (계산 · 추론은 맡기지 않음)
+//   - 임베딩 모델로 나와 상위 후보들의 "소개글 + 관심사" 의미 유사도를 계산해 근거에 넣는다
 //   - LLM 문장이 근거와 어긋나면(없는 숫자 · 1위 이름 누락 · 외국 문자) 한 번 다시 쓰고, 그래도 틀리면 근거 문장을 그대로 보여준다
+//   - 기본: 직접 띄운 로컬 LLM 서버(Ollama + 설명 API, Cloudflare 터널로 공개)에 API 로 요청 → 방문자는 아무것도 받지 않는다.
+//     서버는 켤 때마다 주소가 바뀌어서, 켜질 때 Supabase(ml_ai_server)에 주소를 등록하고 사이트는 거기서 읽어 온다
+//   - 예비: 서버가 꺼져 있으면 이 브라우저 안에서 작은 모델을 직접 실행 (transformers.js, 처음 한 번 약 600MB)
 // ═══════════════════════════════════════════════════════════════════
 const AI = {
+  api: null, // 서버 주소 (ml_ai_url 에서 읽어 온다)
   lib: "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0",
   embedModel: "Xenova/multilingual-e5-small",
   llmModel: "onnx-community/Qwen3.5-0.8B-Text-ONNX",
   system: "너는 소개팅 앱의 추천 설명 도우미야. 사용자가 주는 문장들을 자연스럽게 이어서 왜 1위인지 2~3문장으로 다듬어. "
         + "문장에 없는 내용은 추가하지 말고, 이름과 숫자는 그대로 써. '~일 거예요', '~로 보입니다' 같은 추측하는 말투 없이 단정해서, 한국어 존댓말로만 써.",
 };
-let aiModels = null;              // 모델은 처음 누를 때 한 번만 받는다
-let aiProgress = () => {};
 
+// 받침 있으면 a, 없으면 b (예: 관심사 → "예요", 가치관 → "이에요")
+const josa = (word, a, b) => { const c = word.charCodeAt(word.length - 1) - 0xac00; return c >= 0 && c < 11172 && c % 28 ? a : b; };
+const profileText = p => `${p.intro || ""} 관심사: ${p.interests.join(", ")}`.trim();
+const factsPrompt = facts => "다음 문장들을 자연스럽게 이어 주세요.\n" + facts.map((x, i) => `${i + 1}. ${x}`).join("\n");
+
+// ── 엔진 1: 직접 띄운 로컬 LLM 서버 (Ollama · EXAONE, Cloudflare 터널) ──
+async function aiFetch(path, body, timeout = 120000) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), timeout);
+  try {
+    const res = await fetch(AI.api + path, body
+      ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal }
+      : { signal: ctl.signal });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data) throw new Error(data?.error || `HTTP ${res.status}`);
+    return data;
+  } finally { clearTimeout(timer); }
+}
+const serverEngine = {
+  /** 서버 주소를 읽어 오고, 실제로 켜져 있는지 확인한다 */
+  async prepare() {
+    const s = await rpc("ml_ai_url").catch(() => null);
+    if (!s?.url) throw new Error("server_off");
+    AI.api = s.url;
+    try { await aiFetch("/", null, 8000); } catch { throw new Error("server_off"); }
+  },
+  async sims(me, top) { return (await aiFetch("/embed", { texts: [me, ...top.map(s => s.profile)].map(profileText) })).sims; },
+  async write(facts, sample, onText) { const r = await aiFetch("/explain", { facts, sample }, 180000); onText(r.text); return r.text; },
+  info: () => "LLM: EXAONE 3.5 2.4B · 임베딩: Qwen3-Embedding 0.6B — 직접 띄운 로컬 LLM 서버(Ollama)에서 실행",
+  embedName: "Qwen3-Embedding",
+};
+
+// ── 엔진 2 (예비): 이 브라우저 안에서 직접 실행 (transformers.js) ──
+let aiModels = null;              // 모델은 처음 실행할 때 한 번만 받는다
+let aiProgress = () => {};
 function loadAI() {
   aiModels ??= (async () => {
     const T = await import(AI.lib);
@@ -1189,17 +1225,26 @@ function loadAI() {
   aiModels.catch(() => (aiModels = null)); // 실패하면 다음에 다시 시도
   return aiModels;
 }
-
-// 받침 있으면 a, 없으면 b (예: 관심사 → "예요", 가치관 → "이에요")
-const josa = (word, a, b) => { const c = word.charCodeAt(word.length - 1) - 0xac00; return c >= 0 && c < 11172 && c % 28 ? a : b; };
-const profileText = p => `query: ${p.intro || ""} 관심사: ${p.interests.join(", ")}`;
-
-/** 상위 후보(최대 5명)와 나의 "소개글 + 관심사" 임베딩 코사인 유사도 */
-async function embedSims(ai, me, top) {
-  const out = await ai.embed([me, ...top.map(s => s.profile)].map(profileText), { pooling: "mean", normalize: true });
-  const v = out.tolist();
-  return top.map((_, i) => v[i + 1].reduce((sum, x, k) => sum + x * v[0][k], 0));
-}
+const browserEngine = {
+  ai: null,
+  async prepare() { this.ai = await loadAI(); },
+  async sims(me, top) {
+    const out = await this.ai.embed([me, ...top.map(s => s.profile)].map(p => "query: " + profileText(p)), { pooling: "mean", normalize: true });
+    const v = out.tolist();
+    return top.map((_, i) => v[i + 1].reduce((sum, x, k) => sum + x * v[0][k], 0));
+  },
+  async write(facts, sample, onText) {
+    const { T, tok, llm } = this.ai;
+    const inputs = tok.apply_chat_template([{ role: "system", content: AI.system }, { role: "user", content: factsPrompt(facts) }],
+      { add_generation_prompt: true, return_dict: true, enable_thinking: false });
+    let text = "";
+    const streamer = new T.TextStreamer(tok, { skip_prompt: true, skip_special_tokens: true, callback_function: t => { text += t; onText(text); } });
+    await llm.generate({ ...inputs, max_new_tokens: 160, do_sample: sample, temperature: 0.3, top_p: 0.9, repetition_penalty: 1.1, streamer });
+    return text;
+  },
+  info() { return `LLM: Qwen3.5 0.8B (${this.ai.device === "webgpu" ? "WebGPU" : "CPU"}) · 임베딩: e5-small — 이 브라우저 안에서 실행`; },
+  embedName: "e5-small",
+};
 
 /** 점수 로직의 결과 → LLM 에게 줄 근거 문장 (부정문 없이, 이미 계산된 결론만) */
 function aiFacts(me, scored, sims) {
@@ -1229,58 +1274,58 @@ function aiCheck(text, facts, w) {
   return null;
 }
 
-async function runAI() {
+async function runAI(engine) {
   const me = lastMe, scored = lastScored, w = scored[0], btn = $("#aiBtn"), out = $("#aiOut");
   if (!w) return;
   btn.disabled = true;
   const started = Date.now();
-  out.innerHTML = `<div class="aiProg"><div class="meta" id="aiStatus">AI 모델 준비 중…</div><div class="pbar"><i style="width:0%"></i></div></div>`;
+  out.innerHTML = `<div class="aiProg"><div class="meta" id="aiStatus"></div><div class="pbar"><i style="width:0%"></i></div></div>`;
+  const status = t => { const el = out.querySelector("#aiStatus"); if (el) el.textContent = t; };
+  status(engine === serverEngine ? "AI 서버에 연결 중…" : "AI 모델 준비 중…");
   aiProgress = (loaded, total) => {
-    const st = out.querySelector("#aiStatus"), bar = out.querySelector(".aiProg .pbar i");
-    if (!st) return;
-    st.textContent = `AI 모델 받는 중 ${Math.round((loaded / total) * 100)}% (${Math.round(loaded / 1e6)} / ${Math.round(total / 1e6)}MB) — 처음 한 번만 받아요`;
-    bar.style.width = `${(loaded / total) * 100}%`;
+    status(`AI 모델 받는 중 ${Math.round((loaded / total) * 100)}% (${Math.round(loaded / 1e6)} / ${Math.round(total / 1e6)}MB) — 처음 한 번만 받아요`);
+    const bar = out.querySelector(".aiProg .pbar i");
+    if (bar) bar.style.width = `${(loaded / total) * 100}%`;
   };
   try {
-    const ai = await loadAI();
-    out.querySelector("#aiStatus").textContent = "임베딩으로 소개글 · 관심사 비교 중…";
-    out.querySelector(".aiProg .pbar i").style.width = "100%";
-    const top = scored.slice(0, 5), sims = await embedSims(ai, me, top);
+    await engine.prepare(status);
+    status("임베딩으로 소개글 · 관심사 비교 중…");
+    const top = scored.slice(0, 5), sims = await engine.sims(me, top);
     const facts = aiFacts(me, scored, sims);
-    out.innerHTML = `<div class="aiText typing"></div><div class="meta" id="aiStatus" style="margin-top:6px">로컬 LLM이 설명을 쓰는 중…</div>`;
+    out.innerHTML = `<div class="aiText typing"></div><div class="meta" id="aiStatus" style="margin-top:6px">LLM이 설명을 쓰는 중…</div>`;
     const box = out.querySelector(".aiText");
-    const prompt = "다음 문장들을 자연스럽게 이어 주세요.\n" + facts.map((x, i) => `${i + 1}. ${x}`).join("\n");
-    const inputs = ai.tok.apply_chat_template([{ role: "system", content: AI.system }, { role: "user", content: prompt }],
-      { add_generation_prompt: true, return_dict: true, enable_thinking: false });
     let text = "", problem = null;
     for (let attempt = 0; attempt < 2; attempt++) {
-      text = "";
       box.textContent = "";
-      const streamer = new ai.T.TextStreamer(ai.tok, { skip_prompt: true, skip_special_tokens: true, callback_function: t => { text += t; box.textContent = text; } });
-      await ai.llm.generate({ ...inputs, max_new_tokens: 160, do_sample: attempt > 0, temperature: 0.3, top_p: 0.9, repetition_penalty: 1.1, streamer });
-      text = text.trim();
+      text = (await engine.write(facts, attempt > 0, t => (box.textContent = t))).trim();
       if (!(problem = aiCheck(text, facts, w))) break;
     }
     box.classList.remove("typing");
-    if (problem) box.textContent = facts.join(" ");
+    box.textContent = problem ? facts.join(" ") : text;
     out.querySelector("#aiStatus").remove();
     out.insertAdjacentHTML("beforeend", `
       ${problem ? `<div class="meta" style="margin-top:6px">AI 문장이 근거와 맞지 않아서(${problem}) 근거 문장을 그대로 보여줘요.</div>` : ""}
       <details>
         <summary>AI가 읽은 근거 보기 (점수 로직 결과 + 임베딩)</summary>
         <ol>${facts.map(f => `<li>${esc(f)}</li>`).join("")}</ol>
-        <div>임베딩 유사도 (소개글 + 관심사, e5-small): ${top.map((s, i) => `${esc(s.profile.name)} ${sims[i].toFixed(3)}`).join(" · ")}</div>
-        <div class="meta" style="margin-top:4px">LLM: Qwen3.5 0.8B (${ai.device === "webgpu" ? "WebGPU" : "CPU"}) · ${((Date.now() - started) / 1000).toFixed(0)}초 · 이 브라우저 안에서만 실행</div>
+        <div>임베딩 유사도 (소개글 + 관심사, ${engine.embedName}): ${top.map((s, i) => `${esc(s.profile.name)} ${sims[i].toFixed(3)}`).join(" · ")}</div>
+        <div class="meta" style="margin-top:4px">${esc(engine.info())} · ${((Date.now() - started) / 1000).toFixed(0)}초</div>
       </details>`);
   } catch (err) {
     console.warn(err);
-    out.innerHTML = `<div class="msg err">AI 모델을 불러오지 못했어요. 최신 Chrome / Edge 에서 다시 시도해 주세요. 위의 "왜 1위인가요?"가 같은 근거예요.<br><span class="meta">${esc(err.message ?? err)}</span></div>`;
+    out.innerHTML = engine === serverEngine
+      ? `<div class="msg err">${err.message === "server_off" ? "AI 서버(직접 띄운 로컬 LLM)가 지금 꺼져 있어요." : `AI 서버에 연결하지 못했어요. (${esc(err.message ?? err)})`}</div>
+         <button class="ghost" type="button" id="aiLocalBtn" style="margin-top:8px">대신 이 브라우저에서 직접 실행하기 (처음 한 번 모델 약 600MB를 받아요)</button>`
+      : `<div class="msg err">AI 모델을 불러오지 못했어요. 최신 Chrome / Edge 에서 다시 시도해 주세요. 위의 "왜 1위인가요?"가 같은 근거예요.<br><span class="meta">${esc(err.message ?? err)}</span></div>`;
   } finally {
     btn.disabled = false;
     btn.textContent = "AI 설명 다시 듣기";
   }
 }
-$("#out").addEventListener("click", e => { if (e.target.closest("#aiBtn")) runAI(); });
+$("#out").addEventListener("click", e => {
+  if (e.target.closest("#aiBtn")) runAI(serverEngine);
+  if (e.target.closest("#aiLocalBtn")) runAI(browserEngine);
+});
 
 // ═══════════════════════════════════════════════════════════════════
 // 8. 내 프로필 · 오늘의 추천 · 인기 랭킹
